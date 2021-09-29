@@ -53,7 +53,9 @@
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ViewModel\WindViewModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -92,6 +94,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ASCE7_10Library\ASCE7_10Library.csproj">
+      <Project>{4a740222-ad9d-47e5-97ee-5e67adcfd70c}</Project>
+      <Name>ASCE7_10Library</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DrawingHelperLibrary\DrawingHelpersLibrary\DrawingHelpersLibrary.csproj">
+      <Project>{8B758AE0-4A37-4642-A50F-23F18CB55BA2}</Project>
+      <Name>DrawingHelpersLibrary</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WindCalculator"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="600" Width="800" Loaded="OnWindowLoaded" >
     <Grid>
-        
+        <Canvas Name="MainCanvas" Height="450" Width="450" Background="LightGray" />
     </Grid>
 </Window>
