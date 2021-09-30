@@ -63,13 +63,15 @@ namespace WindCalculator
 
         protected void Draw()
         {
+            double PRESSURE_TEXT_HT = 10;
+
             double SCALE_FACTOR_HORIZ = 0.6 * MainCanvas.Width / WindVM.Bldg.L;
             double SCALE_FACTOR_VERT = 0.6 * MainCanvas.Height / WindVM.Bldg.H;
             double SCALE_FACTOR = Math.Min(SCALE_FACTOR_HORIZ, SCALE_FACTOR_VERT);
             //double SCALE_FACTOR = 1.0;
 
             // Independent scale factor for the pressure diagram
-            double PRESSURE_SCALE_FACTOR = 0.4 * SCALE_FACTOR;
+            double PRESSURE_SCALE_FACTOR = 0.6 * SCALE_FACTOR;
 
             // Center point of current canvas
             double x_center = MainCanvas.Width * 0.5;
@@ -98,12 +100,33 @@ namespace WindCalculator
                 y_ww_15 = y_ww_h;
             }
 
-            double x_q0_ww = x_ww_grd - WindVM.Wind_Prov.Q_0 *PRESSURE_SCALE_FACTOR;
+            // Dynamic pressure q coordinates for WW
+            double x_q0_ww = x_ww_grd - WindVM.Wind_Prov.Q_0 * PRESSURE_SCALE_FACTOR;
             double y_q0_ww = y_ww_grd;
             double x_q15_ww = x_ww_15 - WindVM.Wind_Prov.Q_15 * PRESSURE_SCALE_FACTOR;
             double y_q15_ww = y_ww_15;
-            double x_qh_ww = x_ww_h - WindVM.Wind_Prov.Q_H *PRESSURE_SCALE_FACTOR;
+            double x_qh_ww = x_ww_h - WindVM.Wind_Prov.Q_H * PRESSURE_SCALE_FACTOR;
             double y_qh_ww = y_ww_h;
+
+            // for LW
+            double x_qh_lw = x_lw_h + WindVM.Wind_Prov.Q_H * PRESSURE_SCALE_FACTOR;
+            double y_qh_lw = y_lw_h;
+            double x_q0_lw = x_lw_grd + WindVM.Wind_Prov.Q_H * PRESSURE_SCALE_FACTOR;
+            double y_q0_lw = y_lw_grd;
+
+            // Pressure p = G Cp q values coordinates for WW
+            double x_p0_ww = x_ww_grd - WindVM.Wind_Prov.P_0_WW * PRESSURE_SCALE_FACTOR;
+            double y_p0_ww = y_ww_grd;
+            double x_p15_ww = x_ww_15 - WindVM.Wind_Prov.P_15_WW * PRESSURE_SCALE_FACTOR;
+            double y_p15_ww = y_ww_15;
+            double x_ph_ww = x_ww_h - WindVM.Wind_Prov.P_H_WW * PRESSURE_SCALE_FACTOR;
+            double y_ph_ww = y_ww_h;
+
+            // LW pressure points.  Subtraction here because LW wall pressures are suction (negative);
+            double x_ph_lw = x_lw_h - WindVM.Wind_Prov.P_H_LW * PRESSURE_SCALE_FACTOR;
+            double y_ph_lw = y_lw_h;
+            double x_p0_lw = x_lw_grd - WindVM.Wind_Prov.P_H_LW * PRESSURE_SCALE_FACTOR;
+            double y_p0_lw = y_lw_grd;
 
             // Draw the centerlines of the canvas
             DrawingHelpers.DrawLine(MainCanvas, x_center, 0, x_center, 2.0*y_center, Brushes.BlueViolet, 1, Linetypes.LINETYPE_PHANTOM);
@@ -118,29 +141,47 @@ namespace WindCalculator
             // Draw the LW object line
             DrawingHelpers.DrawLine(MainCanvas, x_lw_h, y_lw_h, x_lw_grd, y_lw_grd, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
 
-            // Draw the WW Pressure Prodile.
-            // q0 pressure line
-            DrawingHelpers.DrawLine(MainCanvas, x_q0_ww, y_q0_ww, x_ww_grd, y_ww_grd, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-            DrawingHelpers.DrawText(MainCanvas, x_q0_ww, y_q0_ww, 0, WindVM.Wind_Prov.Q_0.ToString(), Brushes.Blue, 8);
 
-            // Qh pressure line
-            DrawingHelpers.DrawLine(MainCanvas, x_qh_ww, y_qh_ww, x_ww_h, y_ww_h, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-            DrawingHelpers.DrawText(MainCanvas, x_qh_ww, y_qh_ww, 0, WindVM.Wind_Prov.Q_H.ToString(), Brushes.Blue, 8);
+            // Draw the WW Pressure Proile.
+            // p0 pressure line
+            DrawingHelpers.DrawLine(MainCanvas, x_p0_ww, y_p0_ww, x_ww_grd, y_ww_grd, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
+            DrawingHelpers.DrawText(MainCanvas, x_p0_ww, y_p0_ww, 0, WindVM.Wind_Prov.P_0_WW.ToString(), Brushes.Blue, PRESSURE_TEXT_HT);
 
-            // Draw lines between pressure points
-            DrawingHelpers.DrawLine(MainCanvas, x_q0_ww, y_q0_ww, x_q15_ww, y_q15_ww, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-            DrawingHelpers.DrawLine(MainCanvas, x_q15_ww, y_q15_ww, x_qh_ww, y_qh_ww, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
+            // Ph pressure line
+            DrawingHelpers.DrawLine(MainCanvas, x_ph_ww, y_ph_ww, x_ww_h, y_ww_h, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
+            DrawingHelpers.DrawText(MainCanvas, x_ph_ww, y_ph_ww, 0, WindVM.Wind_Prov.P_H_WW.ToString(), Brushes.Blue, PRESSURE_TEXT_HT);
 
-            // show the dimensions
-            if(WindVM.Bldg.H > 15)
+            // show the 15' WW wall pressure location if necessary.
+            if (WindVM.Bldg.H > 15)
             {
-                DrawingHelpers.DrawVerticalDimension_Left(MainCanvas, 30, 0.2, 5, x_q15_ww, y_q15_ww, x_q0_ww, y_q0_ww, "15'");
+                DrawingHelpers.DrawVerticalDimension_Left(MainCanvas, 30, 0.2, 5, x_p15_ww, y_p15_ww, x_p0_ww, y_p0_ww, "15'");
 
                 // Q15 pressure line
-                DrawingHelpers.DrawLine(MainCanvas, x_q15_ww, y_q15_ww, x_ww_15, y_ww_15, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-                DrawingHelpers.DrawText(MainCanvas, x_q15_ww, y_q15_ww, 0, WindVM.Wind_Prov.Q_15.ToString(), Brushes.Blue, 8);
+                DrawingHelpers.DrawLine(MainCanvas, x_p15_ww, y_p15_ww, x_ww_15, y_ww_15, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
+                DrawingHelpers.DrawText(MainCanvas, x_p15_ww, y_p15_ww, 0, WindVM.Wind_Prov.P_15_WW.ToString(), Brushes.Blue, PRESSURE_TEXT_HT);
             }
 
+            // Draw lines between pressure points
+            DrawingHelpers.DrawLine(MainCanvas, x_p0_ww, y_p0_ww, x_p15_ww, y_p15_ww, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
+            DrawingHelpers.DrawLine(MainCanvas, x_p15_ww, y_p15_ww, x_ph_ww, y_ph_ww, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
+
+
+
+            // Draw the LW Pressure Proile.
+            // p0 pressure line
+            DrawingHelpers.DrawLine(MainCanvas, x_p0_lw, y_p0_lw, x_lw_grd, y_lw_grd, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
+            DrawingHelpers.DrawText(MainCanvas, x_p0_lw, y_p0_ww, 0, WindVM.Wind_Prov.P_H_LW.ToString(), Brushes.Blue, PRESSURE_TEXT_HT);
+
+            // Ph pressure line
+            DrawingHelpers.DrawLine(MainCanvas, x_ph_lw, y_ph_lw, x_lw_h, y_lw_h, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
+            DrawingHelpers.DrawText(MainCanvas, x_ph_lw, y_ph_lw, 0, WindVM.Wind_Prov.P_H_LW.ToString(), Brushes.Blue, PRESSURE_TEXT_HT);
+
+            // Draw lines between LW pressure points
+            DrawingHelpers.DrawLine(MainCanvas, x_p0_lw, y_p0_lw, x_ph_lw, y_ph_lw, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
+
+
+
+            // Draw building dimensions
             DrawingHelpers.DrawHorizontalDimension_Below(MainCanvas, 30, 0.2, 5, x_ww_grd, y_ww_grd, x_lw_grd, y_lw_grd, WindVM.Bldg.L + "'");
             DrawingHelpers.DrawVerticalDimension_Right(MainCanvas, 0.5 * (x_lw_grd - x_ww_grd), 0.2, 5, x_ww_h, y_ww_h, x_ww_grd, y_ww_grd, WindVM.Bldg.H + "'");
         }
