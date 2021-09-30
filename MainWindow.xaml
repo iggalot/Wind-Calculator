@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WindCalculator"
         mc:Ignorable="d"
-        Title="ASCE7-10 Wind Calculator v1.0" Height="600" Width="800" Loaded="OnWindowLoaded" >
+        Title="ASCE7-10 Wind Calculator v1.0" Height="1000" Width="1200" Loaded="OnWindowLoaded" >
     <Grid>
-        <Canvas Name="MainCanvas" Height="450" Width="450" Background="LightGray" />
+        <Canvas Name="MainCanvas" Height="900" Width="900" Background="LightGray" />
     </Grid>
 </Window>

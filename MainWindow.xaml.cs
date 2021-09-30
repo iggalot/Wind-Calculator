@@ -12,6 +12,8 @@ namespace WindCalculator
     /// </summary>
     public partial class MainWindow : Window
     {
+        public const double PRESSURE_TEXT_HT = 10;
+
         /// <summary>
         /// The WindProvision view model for this graphic.
         /// </summary>
@@ -45,7 +47,7 @@ namespace WindCalculator
             double theta = 25; // roof slope
 
             // Create a building object
-            BuildingInfo bldg = new BuildingInfo(85, 100, 100, 0, RiskCategories.II);
+            BuildingInfo bldg = new BuildingInfo(85, 110, 50, 0, RiskCategories.II);
             WindProvisions wind_prov = new WindProvisions(V, bldg, exp);
 
             WindVM = new WindViewModel(bldg, wind_prov);
@@ -63,7 +65,6 @@ namespace WindCalculator
 
         protected void Draw()
         {
-            double PRESSURE_TEXT_HT = 10;
 
             double SCALE_FACTOR_HORIZ = 0.6 * MainCanvas.Width / WindVM.Bldg.L;
             double SCALE_FACTOR_VERT = 0.6 * MainCanvas.Height / WindVM.Bldg.H;
@@ -141,8 +142,12 @@ namespace WindCalculator
             // Draw the LW object line
             DrawingHelpers.DrawLine(MainCanvas, x_lw_h, y_lw_h, x_lw_grd, y_lw_grd, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
 
+            // Draw building dimensions
+            DrawingHelpers.DrawHorizontalDimension_Below(MainCanvas, 30, 0.2, 5, x_ww_grd, y_ww_grd, x_lw_grd, y_lw_grd, WindVM.Bldg.L + "'");
+            DrawingHelpers.DrawVerticalDimension_Right(MainCanvas, 0.5 * (x_lw_grd - x_ww_grd), 0.2, 5, x_ww_h, y_ww_h, x_ww_grd, y_ww_grd, WindVM.Bldg.H + "'");
 
-            // Draw the WW Pressure Proile.
+
+            // Draw the WW Pressure Profile.
             // p0 pressure line
             DrawingHelpers.DrawLine(MainCanvas, x_p0_ww, y_p0_ww, x_ww_grd, y_ww_grd, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
             DrawingHelpers.DrawText(MainCanvas, x_p0_ww, y_p0_ww, 0, WindVM.Wind_Prov.P_0_WW.ToString(), Brushes.Blue, PRESSURE_TEXT_HT);
@@ -165,8 +170,6 @@ namespace WindCalculator
             DrawingHelpers.DrawLine(MainCanvas, x_p0_ww, y_p0_ww, x_p15_ww, y_p15_ww, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
             DrawingHelpers.DrawLine(MainCanvas, x_p15_ww, y_p15_ww, x_ph_ww, y_ph_ww, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
 
-
-
             // Draw the LW Pressure Proile.
             // p0 pressure line
             DrawingHelpers.DrawLine(MainCanvas, x_p0_lw, y_p0_lw, x_lw_grd, y_lw_grd, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
@@ -180,10 +183,729 @@ namespace WindCalculator
             DrawingHelpers.DrawLine(MainCanvas, x_p0_lw, y_p0_lw, x_ph_lw, y_ph_lw, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
 
 
+            // Draw the flat roof pressure
+            DrawRoofPressure_ParallelToRidge_CaseA(x_ww_h, y_ww_h, x_center, y_center, x_ww_grd, y_ww_grd, SCALE_FACTOR, PRESSURE_SCALE_FACTOR);
 
-            // Draw building dimensions
-            DrawingHelpers.DrawHorizontalDimension_Below(MainCanvas, 30, 0.2, 5, x_ww_grd, y_ww_grd, x_lw_grd, y_lw_grd, WindVM.Bldg.L + "'");
-            DrawingHelpers.DrawVerticalDimension_Right(MainCanvas, 0.5 * (x_lw_grd - x_ww_grd), 0.2, 5, x_ww_h, y_ww_h, x_ww_grd, y_ww_grd, WindVM.Bldg.H + "'");
         }
+
+        /// <summary>
+        // Draws the wind pressure diagram for wind normal to a ridge for Case A (uplift on WW roof)
+        /// </summary>
+        /// <param name="x_ww_h">x position of top of windward wall</param>
+        /// <param name="y_ww_h">y position of top of windward wall</param>
+        /// <param name="x_center">x position of center of the canvas</param>
+        /// <param name="y_center">y position of center of the canvas</param>
+        /// <param name="x_ww_grd">x position of ground elev at windward wall</param>
+        /// <param name="y_ww_grd">y position of ground elev at windward wall</param>
+        /// <param name="o_scale">scale factor for object lines (building)</param>
+        /// <param name="p_scale">scale factor for the pressure items</param>
+        protected void DrawRoofPressure_NormalToRidge_CaseA(double x_ww_h, double y_ww_h, double x_center, double y_center, double x_ww_grd, double y_ww_grd, double o_scale, double p_scale)
+        {
+            double PRESSURE_SCALE_FACTOR = p_scale;
+            double SCALE_FACTOR = o_scale;
+
+            // Z1
+            double x_ph_ww_roof_z1_start = x_ww_h;
+            double y_ph_ww_roof_z1_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[0] * PRESSURE_SCALE_FACTOR;
+            double x_ph_ww_roof_z1_end;
+            double y_ph_ww_roof_z1_end;
+
+            //Z2
+            double x_ph_ww_roof_z2_start;
+            double y_ph_ww_roof_z2_start;
+            double x_ph_ww_roof_z2_end;
+            double y_ph_ww_roof_z2_end;
+
+            //Z3
+            double x_ph_ww_roof_z3_start;
+            double y_ph_ww_roof_z3_start;
+            double x_ph_ww_roof_z3_end;
+            double y_ph_ww_roof_z3_end;
+
+            //Z4
+            double x_ph_ww_roof_z4_start;
+            double y_ph_ww_roof_z4_start;
+            double x_ph_ww_roof_z4_end;
+            double y_ph_ww_roof_z4_end;
+
+            // Draw the graphic title
+            DrawingHelpers.DrawText(MainCanvas, x_center - 75, y_ww_grd + 50, 0, "Case A - Normal to Ridge", Brushes.Black, 15);
+
+            if (WindVM.Bldg.RoofSlope < 10)
+            {
+                if (WindVM.Wind_Prov.Building.L < WindVM.Wind_Prov.Building.H / 2.0)
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[0] * PRESSURE_SCALE_FACTOR;
+
+                    //Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                }
+                else if (WindVM.Wind_Prov.Building.L < WindVM.Wind_Prov.Building.H)
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + (0.5 * WindVM.Wind_Prov.Building.H) * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[0] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_start = x_ph_ww_roof_z1_end;
+                    y_ph_ww_roof_z2_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[1] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z2_end = y_ph_ww_roof_z2_start;
+
+                    // Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 2
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_end, y_ww_h, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z2_start, 0.5 * (y_ph_ww_roof_z2_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[1].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_end, y_ww_h, "Z2");
+                }
+                else if (WindVM.Wind_Prov.Building.L < 2.0 * WindVM.Wind_Prov.Building.H)
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + (0.5 * WindVM.Wind_Prov.Building.H) * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[0] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_start = x_ph_ww_roof_z1_end;
+                    y_ph_ww_roof_z2_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[1] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_end = x_ww_h + WindVM.Wind_Prov.Building.H * SCALE_FACTOR;
+                    y_ph_ww_roof_z2_end = y_ph_ww_roof_z2_start;
+
+                    x_ph_ww_roof_z3_start = x_ph_ww_roof_z2_end;
+                    y_ph_ww_roof_z3_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[2] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z3_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z3_end = y_ph_ww_roof_z3_start;
+
+                    // Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 2
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_end, y_ww_h, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z2_start, 0.5 * (y_ph_ww_roof_z2_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[1].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 3
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_end, y_ww_h, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z3_start, 0.5 * (y_ph_ww_roof_z3_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[2].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_end, y_ww_h, "Z2");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_end, y_ww_h, "Z3");
+                }
+                else
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + (0.5 * WindVM.Wind_Prov.Building.H) * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[0] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_start = x_ph_ww_roof_z1_end;
+                    y_ph_ww_roof_z2_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[1] * PRESSURE_SCALE_FACTOR;
+                    x_ph_ww_roof_z2_end = x_ww_h + WindVM.Wind_Prov.Building.H * SCALE_FACTOR;
+                    y_ph_ww_roof_z2_end = y_ph_ww_roof_z2_start;
+
+                    x_ph_ww_roof_z3_start = x_ph_ww_roof_z2_end;
+                    y_ph_ww_roof_z3_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[2] * PRESSURE_SCALE_FACTOR;
+                    x_ph_ww_roof_z3_end = x_ww_h + 2.0 * WindVM.Wind_Prov.Building.H * SCALE_FACTOR;
+                    y_ph_ww_roof_z3_end = y_ph_ww_roof_z3_start;
+
+                    x_ph_ww_roof_z4_start = x_ph_ww_roof_z3_end;
+                    y_ph_ww_roof_z4_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[3] * PRESSURE_SCALE_FACTOR;
+                    x_ph_ww_roof_z4_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z4_end = y_ph_ww_roof_z4_start;
+
+                    // Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 2
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_end, y_ww_h, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z2_start, 0.5 * (y_ph_ww_roof_z2_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[1].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 3
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_end, y_ww_h, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z3_start, 0.5 * (y_ph_ww_roof_z3_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[2].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 4
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z4_start, y_ww_h, x_ph_ww_roof_z4_start, y_ph_ww_roof_z4_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z4_end, y_ww_h, x_ph_ww_roof_z4_end, y_ph_ww_roof_z4_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z4_start, y_ph_ww_roof_z4_start, x_ph_ww_roof_z4_end, y_ph_ww_roof_z4_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z4_start, 0.5 * (y_ph_ww_roof_z4_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA[2].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_end, y_ww_h, "Z2");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_end, y_ww_h, "Z3");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z4_start, y_ww_h, x_ph_ww_roof_z4_end, y_ww_h, "Z4");
+                }
+
+
+
+            }
+        }
+
+        /// <summary>
+        // Draws the wind pressure diagram for wind normal to a ridge for Case B (direct pressure on WW roof)
+        /// </summary>
+        /// <param name="x_ww_h">x position of top of windward wall</param>
+        /// <param name="y_ww_h">y position of top of windward wall</param>
+        /// <param name="x_center">x position of center of the canvas</param>
+        /// <param name="y_center">y position of center of the canvas</param>
+        /// <param name="x_ww_grd">x position of ground elev at windward wall</param>
+        /// <param name="y_ww_grd">y position of ground elev at windward wall</param>
+        /// <param name="o_scale">scale factor for object lines (building)</param>
+        /// <param name="p_scale">scale factor for the pressure items</param>
+        protected void DrawRoofPressure_NormalToRidge_CaseB(double x_ww_h, double y_ww_h, double x_center, double y_center, double x_ww_grd, double y_ww_grd, double o_scale, double p_scale)
+        {
+            double PRESSURE_SCALE_FACTOR = p_scale;
+            double SCALE_FACTOR = o_scale;
+
+            // Z1
+            double x_ph_ww_roof_z1_start = x_ww_h;
+            double y_ph_ww_roof_z1_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[0] * PRESSURE_SCALE_FACTOR;
+            double x_ph_ww_roof_z1_end;
+            double y_ph_ww_roof_z1_end;
+
+            //Z2
+            double x_ph_ww_roof_z2_start;
+            double y_ph_ww_roof_z2_start;
+            double x_ph_ww_roof_z2_end;
+            double y_ph_ww_roof_z2_end;
+
+            //Z3
+            double x_ph_ww_roof_z3_start;
+            double y_ph_ww_roof_z3_start;
+            double x_ph_ww_roof_z3_end;
+            double y_ph_ww_roof_z3_end;
+
+            //Z4
+            double x_ph_ww_roof_z4_start;
+            double y_ph_ww_roof_z4_start;
+            double x_ph_ww_roof_z4_end;
+            double y_ph_ww_roof_z4_end;
+
+            // Draw the graphic title
+            DrawingHelpers.DrawText(MainCanvas, x_center - 75, y_ww_grd + 50, 0, "Case B - Normal to Ridge", Brushes.Black, 15);
+
+            if (WindVM.Bldg.RoofSlope < 10)
+            {
+                if (WindVM.Wind_Prov.Building.L < WindVM.Wind_Prov.Building.H / 2.0)
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[0] * PRESSURE_SCALE_FACTOR;
+
+                    //Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                }
+                else if (WindVM.Wind_Prov.Building.L < WindVM.Wind_Prov.Building.H)
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + (0.5 * WindVM.Wind_Prov.Building.H) * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[0] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_start = x_ph_ww_roof_z1_end;
+                    y_ph_ww_roof_z2_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[1] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z2_end = y_ph_ww_roof_z2_start;
+
+                    // Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 2
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_end, y_ww_h, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z2_start, 0.5 * (y_ph_ww_roof_z2_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[1].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_end, y_ww_h, "Z2");
+                }
+                else if (WindVM.Wind_Prov.Building.L < 2.0 * WindVM.Wind_Prov.Building.H)
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + (0.5 * WindVM.Wind_Prov.Building.H) * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[0] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_start = x_ph_ww_roof_z1_end;
+                    y_ph_ww_roof_z2_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[1] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_end = x_ww_h + WindVM.Wind_Prov.Building.H * SCALE_FACTOR;
+                    y_ph_ww_roof_z2_end = y_ph_ww_roof_z2_start;
+
+                    x_ph_ww_roof_z3_start = x_ph_ww_roof_z2_end;
+                    y_ph_ww_roof_z3_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[2] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z3_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z3_end = y_ph_ww_roof_z3_start;
+
+                    // Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 2
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_end, y_ww_h, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z2_start, 0.5 * (y_ph_ww_roof_z2_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[1].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 3
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_end, y_ww_h, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z3_start, 0.5 * (y_ph_ww_roof_z3_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[2].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_end, y_ww_h, "Z2");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_end, y_ww_h, "Z3");
+                }
+                else
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + (0.5 * WindVM.Wind_Prov.Building.H) * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[0] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_start = x_ph_ww_roof_z1_end;
+                    y_ph_ww_roof_z2_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[1] * PRESSURE_SCALE_FACTOR;
+                    x_ph_ww_roof_z2_end = x_ww_h + WindVM.Wind_Prov.Building.H * SCALE_FACTOR;
+                    y_ph_ww_roof_z2_end = y_ph_ww_roof_z2_start;
+
+                    x_ph_ww_roof_z3_start = x_ph_ww_roof_z2_end;
+                    y_ph_ww_roof_z3_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[2] * PRESSURE_SCALE_FACTOR;
+                    x_ph_ww_roof_z3_end = x_ww_h + 2.0 * WindVM.Wind_Prov.Building.H * SCALE_FACTOR;
+                    y_ph_ww_roof_z3_end = y_ph_ww_roof_z3_start;
+
+                    x_ph_ww_roof_z4_start = x_ph_ww_roof_z3_end;
+                    y_ph_ww_roof_z4_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[3] * PRESSURE_SCALE_FACTOR;
+                    x_ph_ww_roof_z4_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z4_end = y_ph_ww_roof_z4_start;
+
+                    // Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 2
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_end, y_ww_h, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z2_start, 0.5 * (y_ph_ww_roof_z2_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[1].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 3
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_end, y_ww_h, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z3_start, 0.5 * (y_ph_ww_roof_z3_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[2].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 4
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z4_start, y_ww_h, x_ph_ww_roof_z4_start, y_ph_ww_roof_z4_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z4_end, y_ww_h, x_ph_ww_roof_z4_end, y_ph_ww_roof_z4_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z4_start, y_ph_ww_roof_z4_start, x_ph_ww_roof_z4_end, y_ph_ww_roof_z4_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z4_start, 0.5 * (y_ph_ww_roof_z4_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB[2].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_end, y_ww_h, "Z2");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_end, y_ww_h, "Z3");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z4_start, y_ww_h, x_ph_ww_roof_z4_end, y_ww_h, "Z4");
+                }
+            }
+        }
+
+        /// <summary>
+        // Draws the wind pressure diagram for wind normal to a ridge for Case A (uplift on WW roof)
+        /// </summary>
+        /// <param name="x_ww_h">x position of top of windward wall</param>
+        /// <param name="y_ww_h">y position of top of windward wall</param>
+        /// <param name="x_center">x position of center of the canvas</param>
+        /// <param name="y_center">y position of center of the canvas</param>
+        /// <param name="x_ww_grd">x position of ground elev at windward wall</param>
+        /// <param name="y_ww_grd">y position of ground elev at windward wall</param>
+        /// <param name="o_scale">scale factor for object lines (building)</param>
+        /// <param name="p_scale">scale factor for the pressure items</param>
+        protected void DrawRoofPressure_ParallelToRidge_CaseA(double x_ww_h, double y_ww_h, double x_center, double y_center, double x_ww_grd, double y_ww_grd, double o_scale, double p_scale)
+        {
+            double PRESSURE_SCALE_FACTOR = p_scale;
+            double SCALE_FACTOR = o_scale;
+
+            // Z1
+            double x_ph_ww_roof_z1_start = x_ww_h;
+            double y_ph_ww_roof_z1_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[0] * PRESSURE_SCALE_FACTOR;
+            double x_ph_ww_roof_z1_end;
+            double y_ph_ww_roof_z1_end;
+
+            //Z2
+            double x_ph_ww_roof_z2_start;
+            double y_ph_ww_roof_z2_start;
+            double x_ph_ww_roof_z2_end;
+            double y_ph_ww_roof_z2_end;
+
+            //Z3
+            double x_ph_ww_roof_z3_start;
+            double y_ph_ww_roof_z3_start;
+            double x_ph_ww_roof_z3_end;
+            double y_ph_ww_roof_z3_end;
+
+            //Z4
+            double x_ph_ww_roof_z4_start;
+            double y_ph_ww_roof_z4_start;
+            double x_ph_ww_roof_z4_end;
+            double y_ph_ww_roof_z4_end;
+
+            // Draw the graphic title
+            DrawingHelpers.DrawText(MainCanvas, x_center - 75, y_ww_grd + 50, 0, "Case A - Normal to Ridge", Brushes.Black, 15);
+
+            if (WindVM.Bldg.RoofSlope < 10)
+            {
+                if (WindVM.Wind_Prov.Building.L < WindVM.Wind_Prov.Building.H / 2.0)
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[0] * PRESSURE_SCALE_FACTOR;
+
+                    //Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                }
+                else if (WindVM.Wind_Prov.Building.L < WindVM.Wind_Prov.Building.H)
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + (0.5 * WindVM.Wind_Prov.Building.H) * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[0] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_start = x_ph_ww_roof_z1_end;
+                    y_ph_ww_roof_z2_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[1] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z2_end = y_ph_ww_roof_z2_start;
+
+                    // Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 2
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_end, y_ww_h, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z2_start, 0.5 * (y_ph_ww_roof_z2_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[1].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_end, y_ww_h, "Z2");
+                }
+                else if (WindVM.Wind_Prov.Building.L < 2.0 * WindVM.Wind_Prov.Building.H)
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + (0.5 * WindVM.Wind_Prov.Building.H) * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[0] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_start = x_ph_ww_roof_z1_end;
+                    y_ph_ww_roof_z2_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[1] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_end = x_ww_h + WindVM.Wind_Prov.Building.H * SCALE_FACTOR;
+                    y_ph_ww_roof_z2_end = y_ph_ww_roof_z2_start;
+
+                    x_ph_ww_roof_z3_start = x_ph_ww_roof_z2_end;
+                    y_ph_ww_roof_z3_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[2] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z3_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z3_end = y_ph_ww_roof_z3_start;
+
+                    // Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 2
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_end, y_ww_h, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z2_start, 0.5 * (y_ph_ww_roof_z2_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[1].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 3
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_end, y_ww_h, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z3_start, 0.5 * (y_ph_ww_roof_z3_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[2].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_end, y_ww_h, "Z2");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_end, y_ww_h, "Z3");
+                }
+                else
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + (0.5 * WindVM.Wind_Prov.Building.H) * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[0] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_start = x_ph_ww_roof_z1_end;
+                    y_ph_ww_roof_z2_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[1] * PRESSURE_SCALE_FACTOR;
+                    x_ph_ww_roof_z2_end = x_ww_h + WindVM.Wind_Prov.Building.H * SCALE_FACTOR;
+                    y_ph_ww_roof_z2_end = y_ph_ww_roof_z2_start;
+
+                    x_ph_ww_roof_z3_start = x_ph_ww_roof_z2_end;
+                    y_ph_ww_roof_z3_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[2] * PRESSURE_SCALE_FACTOR;
+                    x_ph_ww_roof_z3_end = x_ww_h + 2.0 * WindVM.Wind_Prov.Building.H * SCALE_FACTOR;
+                    y_ph_ww_roof_z3_end = y_ph_ww_roof_z3_start;
+
+                    x_ph_ww_roof_z4_start = x_ph_ww_roof_z3_end;
+                    y_ph_ww_roof_z4_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[3] * PRESSURE_SCALE_FACTOR;
+                    x_ph_ww_roof_z4_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z4_end = y_ph_ww_roof_z4_start;
+
+                    // Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 2
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_end, y_ww_h, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z2_start, 0.5 * (y_ph_ww_roof_z2_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[1].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 3
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_end, y_ww_h, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z3_start, 0.5 * (y_ph_ww_roof_z3_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[2].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 4
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z4_start, y_ww_h, x_ph_ww_roof_z4_start, y_ph_ww_roof_z4_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z4_end, y_ww_h, x_ph_ww_roof_z4_end, y_ph_ww_roof_z4_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z4_start, y_ph_ww_roof_z4_start, x_ph_ww_roof_z4_end, y_ph_ww_roof_z4_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z4_start, 0.5 * (y_ph_ww_roof_z4_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA[2].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_end, y_ww_h, "Z2");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_end, y_ww_h, "Z3");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z4_start, y_ww_h, x_ph_ww_roof_z4_end, y_ww_h, "Z4");
+                }
+            }
+        }
+
+        /// <summary>
+        // Draws the wind pressure diagram for wind normal to a ridge for Case A (uplift on WW roof)
+        /// </summary>
+        /// <param name="x_ww_h">x position of top of windward wall</param>
+        /// <param name="y_ww_h">y position of top of windward wall</param>
+        /// <param name="x_center">x position of center of the canvas</param>
+        /// <param name="y_center">y position of center of the canvas</param>
+        /// <param name="x_ww_grd">x position of ground elev at windward wall</param>
+        /// <param name="y_ww_grd">y position of ground elev at windward wall</param>
+        /// <param name="o_scale">scale factor for object lines (building)</param>
+        /// <param name="p_scale">scale factor for the pressure items</param>
+        protected void DrawRoofPressure_ParallelToRidge_CaseB(double x_ww_h, double y_ww_h, double x_center, double y_center, double x_ww_grd, double y_ww_grd, double o_scale, double p_scale)
+        {
+            double PRESSURE_SCALE_FACTOR = p_scale;
+            double SCALE_FACTOR = o_scale;
+
+            // Z1
+            double x_ph_ww_roof_z1_start = x_ww_h;
+            double y_ph_ww_roof_z1_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[0] * PRESSURE_SCALE_FACTOR;
+            double x_ph_ww_roof_z1_end;
+            double y_ph_ww_roof_z1_end;
+
+            //Z2
+            double x_ph_ww_roof_z2_start;
+            double y_ph_ww_roof_z2_start;
+            double x_ph_ww_roof_z2_end;
+            double y_ph_ww_roof_z2_end;
+
+            //Z3
+            double x_ph_ww_roof_z3_start;
+            double y_ph_ww_roof_z3_start;
+            double x_ph_ww_roof_z3_end;
+            double y_ph_ww_roof_z3_end;
+
+            //Z4
+            double x_ph_ww_roof_z4_start;
+            double y_ph_ww_roof_z4_start;
+            double x_ph_ww_roof_z4_end;
+            double y_ph_ww_roof_z4_end;
+
+            // Draw the graphic title
+            DrawingHelpers.DrawText(MainCanvas, x_center - 75, y_ww_grd + 50, 0, "Case A - Normal to Ridge", Brushes.Black, 15);
+
+            if (WindVM.Bldg.RoofSlope < 10)
+            {
+                if (WindVM.Wind_Prov.Building.L < WindVM.Wind_Prov.Building.H / 2.0)
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[0] * PRESSURE_SCALE_FACTOR;
+
+                    //Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                }
+                else if (WindVM.Wind_Prov.Building.L < WindVM.Wind_Prov.Building.H)
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + (0.5 * WindVM.Wind_Prov.Building.H) * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[0] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_start = x_ph_ww_roof_z1_end;
+                    y_ph_ww_roof_z2_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[1] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z2_end = y_ph_ww_roof_z2_start;
+
+                    // Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 2
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_end, y_ww_h, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z2_start, 0.5 * (y_ph_ww_roof_z2_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[1].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_end, y_ww_h, "Z2");
+                }
+                else if (WindVM.Wind_Prov.Building.L < 2.0 * WindVM.Wind_Prov.Building.H)
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + (0.5 * WindVM.Wind_Prov.Building.H) * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[0] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_start = x_ph_ww_roof_z1_end;
+                    y_ph_ww_roof_z2_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[1] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_end = x_ww_h + WindVM.Wind_Prov.Building.H * SCALE_FACTOR;
+                    y_ph_ww_roof_z2_end = y_ph_ww_roof_z2_start;
+
+                    x_ph_ww_roof_z3_start = x_ph_ww_roof_z2_end;
+                    y_ph_ww_roof_z3_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[2] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z3_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z3_end = y_ph_ww_roof_z3_start;
+
+                    // Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 2
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_end, y_ww_h, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z2_start, 0.5 * (y_ph_ww_roof_z2_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[1].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 3
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_end, y_ww_h, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z3_start, 0.5 * (y_ph_ww_roof_z3_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[2].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_end, y_ww_h, "Z2");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_end, y_ww_h, "Z3");
+                }
+                else
+                {
+                    x_ph_ww_roof_z1_end = x_ww_h + (0.5 * WindVM.Wind_Prov.Building.H) * SCALE_FACTOR;
+                    y_ph_ww_roof_z1_end = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[0] * PRESSURE_SCALE_FACTOR;
+
+                    x_ph_ww_roof_z2_start = x_ph_ww_roof_z1_end;
+                    y_ph_ww_roof_z2_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[1] * PRESSURE_SCALE_FACTOR;
+                    x_ph_ww_roof_z2_end = x_ww_h + WindVM.Wind_Prov.Building.H * SCALE_FACTOR;
+                    y_ph_ww_roof_z2_end = y_ph_ww_roof_z2_start;
+
+                    x_ph_ww_roof_z3_start = x_ph_ww_roof_z2_end;
+                    y_ph_ww_roof_z3_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[2] * PRESSURE_SCALE_FACTOR;
+                    x_ph_ww_roof_z3_end = x_ww_h + 2.0 * WindVM.Wind_Prov.Building.H * SCALE_FACTOR;
+                    y_ph_ww_roof_z3_end = y_ph_ww_roof_z3_start;
+
+                    x_ph_ww_roof_z4_start = x_ph_ww_roof_z3_end;
+                    y_ph_ww_roof_z4_start = y_ww_h - WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[3] * PRESSURE_SCALE_FACTOR;
+                    x_ph_ww_roof_z4_end = x_ww_h + WindVM.Wind_Prov.Building.L * SCALE_FACTOR;
+                    y_ph_ww_roof_z4_end = y_ph_ww_roof_z4_start;
+
+                    // Zone 1
+                    DrawingHelpers.DrawLine(MainCanvas, x_ww_h, y_ww_h, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_end, y_ww_h, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z1_start, y_ph_ww_roof_z1_start, x_ph_ww_roof_z1_end, y_ph_ww_roof_z1_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ww_h, 0.5 * (y_ph_ww_roof_z1_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[0].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 2
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_end, y_ww_h, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z2_start, y_ph_ww_roof_z2_start, x_ph_ww_roof_z2_end, y_ph_ww_roof_z2_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z2_start, 0.5 * (y_ph_ww_roof_z2_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[1].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 3
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_end, y_ww_h, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z3_start, y_ph_ww_roof_z3_start, x_ph_ww_roof_z3_end, y_ph_ww_roof_z3_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z3_start, 0.5 * (y_ph_ww_roof_z3_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[2].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Zone 4
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z4_start, y_ww_h, x_ph_ww_roof_z4_start, y_ph_ww_roof_z4_start, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z4_end, y_ww_h, x_ph_ww_roof_z4_end, y_ph_ww_roof_z4_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawLine(MainCanvas, x_ph_ww_roof_z4_start, y_ph_ww_roof_z4_start, x_ph_ww_roof_z4_end, y_ph_ww_roof_z4_end, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                    DrawingHelpers.DrawText(MainCanvas, x_ph_ww_roof_z4_start, 0.5 * (y_ph_ww_roof_z4_start + y_ww_h), 0, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB[2].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+
+                    // Draw Pressure Dimensions
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z1_start, y_ww_h, x_ph_ww_roof_z1_end, y_ww_h, "Z1");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z2_start, y_ww_h, x_ph_ww_roof_z2_end, y_ww_h, "Z2");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z3_start, y_ww_h, x_ph_ww_roof_z3_end, y_ww_h, "Z3");
+                    DrawingHelpers.DrawHorizontalDimension_Above(MainCanvas, 30, 0.2, 5, x_ph_ww_roof_z4_start, y_ww_h, x_ph_ww_roof_z4_end, y_ww_h, "Z4");
+                }
+            }
+        }
+
     }
 }
