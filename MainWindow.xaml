@@ -7,9 +7,19 @@
         mc:Ignorable="d"
         Title="ASCE7-10 Wind Calculator v1.0" Height="1000" Width="1700" Loaded="OnWindowLoaded" >
     <Grid>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <Canvas Margin="10" Name="MainCanvas" Height="800" Width="800" Background="LightGray" />
-            <Canvas Margin="10" Name="Canvas2" Height="800" Width="800" Background="LightGray" />
-        </StackPanel>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Canvas Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" Margin="10" Name="MainCanvas" Height="900" Width="900" Background="LightGray" />
+        <Canvas Grid.Row="0" Grid.Column="1" Margin="5" Name="Canvas2" Height="300" Width="300" Background="LightGray" />
+        <Canvas Grid.Row="1" Grid.Column="1" Margin="5" Name="Canvas3" Height="300" Width="300" Background="LightGray" />
+        <Canvas Grid.Row="2" Grid.Column="1" Margin="5" Name="Canvas4" Height="300" Width="300" Background="LightGray" />
     </Grid>
 </Window>
