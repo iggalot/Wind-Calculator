@@ -48,7 +48,7 @@ namespace WindCalculator
             Draw(Canvas3);
             Draw(Canvas4);
 
-            DrawingHelpers.DrawRectangleAligned_Base(MainCanvas, 100, 600, 600, 100, 75, Brushes.Purple, 1, Linetypes.LINETYPE_PHANTOM);
+           // DrawingHelpers.DrawRectangleAligned_Base(MainCanvas, 100, 600, 600, 100, 75, Brushes.Purple, 1, Linetypes.LINETYPE_PHANTOM);
         }
 
         /// <summary>
@@ -152,14 +152,20 @@ namespace WindCalculator
             double x_p0_lw = x_lw_grd - WindVM.Wind_Prov.P_H_LW * PRESSURE_SCALE_FACTOR;
             double y_p0_lw = y_lw_grd;
 
+
+            // create our pressure label
+            string pressure_str;
+
             // Draw the WW Pressure Profile.
             // p0 pressure line
             DrawingHelpers.DrawLine(canvas, x_p0_ww, y_p0_ww, x_ww_grd, y_ww_grd, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-            DrawingHelpers.DrawText(canvas, x_p0_ww, y_p0_ww, 0, WindVM.Wind_Prov.P_0_WW.ToString(), Brushes.Blue, PRESSURE_TEXT_HT);
+            pressure_str = (Math.Round(WindVM.Wind_Prov.P_0_WW * 100.0) / 100.0).ToString();
+            DrawingHelpers.DrawText(canvas, x_p0_ww, y_p0_ww, 0, pressure_str, Brushes.Blue, PRESSURE_TEXT_HT);
 
             // Ph pressure line
             DrawingHelpers.DrawLine(canvas, x_ph_ww, y_ph_ww, x_ww_h, y_ww_h, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-            DrawingHelpers.DrawText(canvas, x_ph_ww, y_ph_ww, 0, WindVM.Wind_Prov.P_H_WW.ToString(), Brushes.Blue, PRESSURE_TEXT_HT);
+            pressure_str = (Math.Round(WindVM.Wind_Prov.P_H_WW * 100.0) / 100.0).ToString();
+            DrawingHelpers.DrawText(canvas, x_ph_ww, y_ph_ww, 0, pressure_str, Brushes.Blue, PRESSURE_TEXT_HT);
 
             // show the 15' WW wall pressure location if necessary.
             if (WindVM.Bldg.H > 15)
@@ -170,7 +176,8 @@ namespace WindCalculator
 
                 // Q15 pressure line
                 DrawingHelpers.DrawLine(canvas, x_p15_ww, y_p15_ww, x_ww_15, y_ww_15, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-                DrawingHelpers.DrawText(canvas, x_p15_ww, y_p15_ww, 0, WindVM.Wind_Prov.P_15_WW.ToString(), Brushes.Blue, PRESSURE_TEXT_HT);
+                pressure_str = (Math.Round(WindVM.Wind_Prov.P_15_WW * 100.0) / 100.0).ToString();
+                DrawingHelpers.DrawText(canvas, x_p15_ww, y_p15_ww, 0, pressure_str.ToString(), Brushes.Blue, PRESSURE_TEXT_HT);
             }
 
             // Draw lines between pressure points
@@ -180,11 +187,13 @@ namespace WindCalculator
             // Draw the LW Pressure Proile.
             // p0 pressure line
             DrawingHelpers.DrawLine(canvas, x_p0_lw, y_p0_lw, x_lw_grd, y_lw_grd, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-            DrawingHelpers.DrawText(canvas, x_p0_lw, y_p0_ww, 0, WindVM.Wind_Prov.P_H_LW.ToString(), Brushes.Blue, PRESSURE_TEXT_HT);
+            pressure_str = (Math.Round(WindVM.Wind_Prov.P_H_LW * 100.0) / 100.0).ToString();
+            DrawingHelpers.DrawText(canvas, x_p0_lw, y_p0_ww, 0, pressure_str, Brushes.Blue, PRESSURE_TEXT_HT);
 
             // Ph pressure line
             DrawingHelpers.DrawLine(canvas, x_ph_lw, y_ph_lw, x_lw_h, y_lw_h, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-            DrawingHelpers.DrawText(canvas, x_ph_lw, y_ph_lw, 0, WindVM.Wind_Prov.P_H_LW.ToString(), Brushes.Blue, PRESSURE_TEXT_HT);
+            pressure_str = (Math.Round(WindVM.Wind_Prov.P_H_LW * 100.0) / 100.0).ToString();
+            DrawingHelpers.DrawText(canvas, x_ph_lw, y_ph_lw, 0, pressure_str, Brushes.Blue, PRESSURE_TEXT_HT);
 
             // Draw lines between LW pressure points
             DrawingHelpers.DrawLine(canvas, x_p0_lw, y_p0_lw, x_ph_lw, y_ph_lw, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
@@ -314,8 +323,11 @@ namespace WindCalculator
                     continue;
                 }
 
+                // create our pressure label
+                string pressure_str = (Math.Round(arr[i] * 100.0) / 100.0).ToString();
+
                 DrawingHelpers.DrawRectangle(canvas, x_p1, y_ww_h, (x_p2 - x_p1), y_p - y_ww_h, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
-                DrawingHelpers.DrawText(canvas, x_p1, y_p, 0, arr[i].ToString(), Brushes.Red, PRESSURE_TEXT_HT);
+                DrawingHelpers.DrawText(canvas, x_p1, y_p, 0, pressure_str, Brushes.Red, PRESSURE_TEXT_HT);
                 DrawingHelpers.DrawDimensionAligned(canvas, x_p1, y_ww_h, x_p2, y_ww_h, "Z" + (i+1).ToString(), 10);
             }
         }
