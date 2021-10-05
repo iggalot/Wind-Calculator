@@ -59,10 +59,23 @@ namespace WindCalculator
             ExposureCategories exp = ExposureCategories.B;
             double V = 115;   // mph
 
-            double theta = 25; // roof slope
-
             // Create a building object
-            BuildingInfo bldg = new BuildingInfo(100, 100, 75, 0, RiskCategories.II);
+            //BuildingInfo bldg = new BuildingInfo(85, 52, 35, RiskCategories.II);
+
+
+            double wall_ht = 35;  // wall height
+            double b = 100; // length perpendicular to wind
+            double ww_wall_x = 0;
+            double ww_wall_y = wall_ht;
+            double ridge_x = 50;
+            double ridge_y = wall_ht + 15;
+            double lw_wall_x = 100;
+            double lw_wall_y = wall_ht;
+
+            // Profile of the roof line
+            double[] profile = new double[] { ww_wall_x, ww_wall_y, ridge_x, ridge_y, lw_wall_x, lw_wall_y };
+            BuildingInfo bldg = new SlopedRoofBuildingInfo(b, (lw_wall_x - lw_wall_y), 0.5 * (ridge_x + ww_wall_x), profile, RiskCategories.II);
+
             WindProvisions wind_prov = new WindProvisions(V, bldg, exp);
 
             WindVM = new WindViewModel(bldg, wind_prov);
