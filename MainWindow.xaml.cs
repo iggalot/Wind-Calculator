@@ -29,7 +29,13 @@ namespace WindCalculator
         /// The WindProvision view model for this graphic.
         /// </summary>
         public WindViewModel WindVM { get; set; }
-        public BuildingViewModel BuildingVM { get; set; }
+
+        // BuildingVM for each Canvas
+        public BuildingViewModel BuildingVM_1 { get; set; }
+        public BuildingViewModel BuildingVM_2 { get; set; }
+        public BuildingViewModel BuildingVM_3 { get; set; }
+        public BuildingViewModel BuildingVM_4 { get; set; }
+
 
         public MainWindow()
         {
@@ -38,6 +44,10 @@ namespace WindCalculator
             DataContext = this;
 
             OnUserCreate(MainCanvas);
+            OnUserCreate(Canvas2);
+            OnUserCreate(Canvas3);
+            OnUserCreate(Canvas4);
+
         }
 
         /// <summary>
@@ -45,12 +55,10 @@ namespace WindCalculator
         /// </summary>
         private void OnUserUpdate()
         {
-            Draw(MainCanvas);
-            //Draw(Canvas2);
-            //Draw(Canvas3);
-            //Draw(Canvas4);
-
-           // DrawingHelpers.DrawRectangleAligned_Base(MainCanvas, 100, 600, 600, 100, 75, Brushes.Purple, 1, Linetypes.LINETYPE_PHANTOM);
+            Draw(MainCanvas, BuildingVM_1);
+            Draw(Canvas2, BuildingVM_2);
+            Draw(Canvas3, BuildingVM_3);
+            Draw(Canvas4, BuildingVM_4);
         }
 
         /// <summary>
@@ -74,8 +82,15 @@ namespace WindCalculator
             // Create a building object
             // Profile of the roof line
             // TODO:: Need to sort the order of these points or provide some sort of logic (left-to-right) progression of points
+
+            ////TESTING: Sloped roof profile
             double[] profile = new double[] { ww_wall_x, ww_wall_y, ww_wall_x + 25, wall_ht + 10, ridge_x, ridge_y, ww_wall_x + 75, wall_ht + 10, lw_wall_x, lw_wall_y };
             BuildingInfo bldg = new SlopedRoofBuildingInfo(b, (lw_wall_x - ww_wall_x), 0.5 * (ridge_y + ww_wall_y), profile, RiskCategories.II);
+
+
+            ////TESTING: flat roof profile
+            //double[] profile = new double[] { ww_wall_x, ww_wall_y, lw_wall_x, lw_wall_y };
+            //BuildingInfo bldg = new BuildingInfo(b, (lw_wall_x - ww_wall_x), 0.5 * (ridge_y + ww_wall_y), profile, RiskCategories.II);
 
             // Create the wind provision model
             WindProvisions wind_prov = new WindProvisions(V, bldg, exp);
@@ -91,8 +106,24 @@ namespace WindCalculator
             // Independent scale factor for the pressure diagram
             PRESSURE_SCALE_FACTOR = 0.6 * SCALE_FACTOR;
 
-            // Create the view model for the building object on its canvas
-            BuildingVM = new BuildingViewModel(canvas, bldg, SCALE_FACTOR);
+            // Create the view models for the building object on its canvas
+            switch (canvas.Name)
+            {
+                case "MainCanvas":
+                    BuildingVM_1 = new BuildingViewModel(canvas, bldg, SCALE_FACTOR);
+                    break;
+                case "Canvas2":
+                    BuildingVM_2 = new BuildingViewModel(canvas, bldg, SCALE_FACTOR);
+                    break;
+                case "Canvas3":
+                    BuildingVM_3 = new BuildingViewModel(canvas, bldg, SCALE_FACTOR);
+                    break;
+                case "Canvas4":
+                    BuildingVM_4 = new BuildingViewModel(canvas, bldg, SCALE_FACTOR);
+                    break;
+                default:
+                    break;
+            }
         }
 
         /// <summary>
@@ -109,9 +140,9 @@ namespace WindCalculator
         /// Draws the building object to the sspecified canvas
         /// </summary>
         /// <param name="canvas">the canvas object to draw to</param>
-        private void DrawStructure_Elevation(Canvas canvas)
+        private void DrawStructure_Elevation(Canvas canvas, BuildingViewModel building_vm)
         {
-            BuildingVM.Draw(canvas, STRUCTURE_DIM_TEXT_HT);
+            building_vm.Draw(canvas, STRUCTURE_DIM_TEXT_HT);
         }
 
         /// <summary>
@@ -253,7 +284,7 @@ namespace WindCalculator
         /// the main drawing function for the canvas object
         /// </summary>
         /// <param name="canvas"></param>
-        protected void Draw(Canvas canvas)
+        protected void Draw(Canvas canvas, BuildingViewModel view_model)
         {
             // Center point of current canvas
             double x_center = canvas.Width * 0.5;
@@ -286,7 +317,7 @@ namespace WindCalculator
             }
 
             // Draw the building object
-            DrawStructure_Elevation(canvas);
+            DrawStructure_Elevation(canvas, view_model);
 
             // Draw the wall pressures
             DrawWallPressure_Elevation(canvas, x_ww_grd, y_ww_grd, x_ww_15, y_ww_15, x_ww_h, y_ww_h, x_lw_grd, y_lw_grd, x_lw_h, y_lw_h);

@@ -87,13 +87,18 @@ namespace WindCalculator.ViewModel
 
             // Apply the transforms to get screen coords
            ORIGIN_SC = Vector4.Transform(bldg.ORIGIN, TRS_Matrix);
-           RIDGE_1_SC = Vector4.Transform(bldg.RIDGE_1, TRS_Matrix);
            WW_GRD_1_SC = Vector4.Transform(bldg.WW_GRD_1, TRS_Matrix);
            WW_15_1_SC = Vector4.Transform(bldg.WW_15_1, TRS_Matrix);
            WW_H_1_SC = Vector4.Transform(bldg.WW_H_1, TRS_Matrix);
            LW_GRD_1_SC = Vector4.Transform(bldg.LW_GRD_1, TRS_Matrix);
            LW_15_1_SC = Vector4.Transform(bldg.LW_15_1, TRS_Matrix);
            LW_H_1_SC = Vector4.Transform(bldg.LW_H_1, TRS_Matrix);
+
+            // If the building has a ridge, set that point.
+            if (bldg.HasSingleRidge)
+            {
+                RIDGE_1_SC = Vector4.Transform(bldg.RIDGE_1, TRS_Matrix);
+            }
 
             // Create our roof profile array for screen coords
             RoofProfile_SC = new Vector4[bldg.RoofProfile.Length / 2];
@@ -133,9 +138,6 @@ namespace WindCalculator.ViewModel
             dim_str = (Math.Round(Model.L * 100.0) / 100.0).ToString() + "'";
             DrawingHelpers.DrawDimensionAligned(canvas, WW_GRD_1_SC.X, WW_GRD_1_SC.Y, LW_GRD_1_SC.X, LW_GRD_1_SC.Y, dim_str, dim_text_ht);
 
-            // Horizontal to Ridge
-            dim_str = (Math.Round((Model.RIDGE_1.X) * 100.0) / 100.0).ToString() + "'";
-            DrawingHelpers.DrawDimensionAligned(canvas, WW_H_1_SC.X, RIDGE_1_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht); ;
 
             // LW wall
             dim_str = (Math.Round(((Model.LW_GRD_1.Y - Model.LW_H_1.Y)) * 100.0) / 100.0).ToString() + "'";
@@ -145,9 +147,21 @@ namespace WindCalculator.ViewModel
             dim_str = (Math.Round(((Model.WW_GRD_1.Y - Model.WW_H_1.Y)) * 100.0) / 100.0).ToString() + "'";
             DrawingHelpers.DrawDimensionAligned(canvas, WW_GRD_1_SC.X, WW_GRD_1_SC.Y,WW_H_1_SC.X, WW_H_1_SC.Y, dim_str, dim_text_ht);
 
-            // Vertical to Ridge
-            dim_str = (Math.Round(((Model.ORIGIN.Y - Model.RIDGE_1.Y)) * 100.0) / 100.0).ToString() + "'";
-            DrawingHelpers.DrawDimensionAligned(canvas, RIDGE_1_SC.X, ORIGIN_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht); ;
+            // Dimension the Ridge Point
+            if (Model.HasSingleRidge)
+            {
+                // Vertical to Ridge
+                dim_str = (Math.Round(((Model.ORIGIN.Y - Model.RIDGE_1.Y)) * 100.0) / 100.0).ToString() + "'";
+                DrawingHelpers.DrawDimensionAligned(canvas, RIDGE_1_SC.X, ORIGIN_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht);
+                // Horizontal to Ridge from WW
+                dim_str = (Math.Round((Model.RIDGE_1.X - Model.WW_H_1.X) * 100.0) / 100.0).ToString() + "'";
+                DrawingHelpers.DrawDimensionAligned(canvas, WW_H_1_SC.X, RIDGE_1_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht);
+                
+                // Horizontal to Ridge from LW
+                dim_str = (Math.Round((Model.LW_H_1.X - Model.RIDGE_1.X) * 100.0) / 100.0).ToString() + "'";
+                DrawingHelpers.DrawDimensionAligned(canvas, LW_H_1_SC.X, RIDGE_1_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht); ;
+            }
+
         }
 
         public static float ConvertDegToRad(float degrees)
