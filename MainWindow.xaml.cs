@@ -29,6 +29,7 @@ namespace WindCalculator
         /// The WindProvision view model for this graphic.
         /// </summary>
         public WindViewModel WindVM { get; set; }
+        public BuildingViewModel BuildingVM { get; set; }
 
         public MainWindow()
         {
@@ -36,7 +37,7 @@ namespace WindCalculator
 
             DataContext = this;
 
-            OnUserCreate();
+            OnUserCreate(MainCanvas);
         }
 
         /// <summary>
@@ -55,15 +56,12 @@ namespace WindCalculator
         /// <summary>
         /// Routine that runs only once when the program is first executed
         /// </summary>
-        private void OnUserCreate()
+        private void OnUserCreate(Canvas canvas)
         {
             ExposureCategories exp = ExposureCategories.B;
             double V = 115;   // mph
 
-            // Create a building object
-            //BuildingInfo bldg = new BuildingInfo(85, 52, 35, RiskCategories.II);
-
-
+            // building dimension constants
             double wall_ht = 35;  // wall height
             double b = 100; // length perpendicular to wind
             double ww_wall_x = 0;
@@ -73,13 +71,28 @@ namespace WindCalculator
             double lw_wall_x = 100;
             double lw_wall_y = wall_ht;
 
+            // Create a building object
             // Profile of the roof line
-            double[] profile = new double[] { ww_wall_x, ww_wall_y, ww_wall_x+25, wall_ht+10, ridge_x, ridge_y, ww_wall_x+75, wall_ht+10, lw_wall_x, lw_wall_y };
+            // TODO:: Need to sort the order of these points or provide some sort of logic (left-to-right) progression of points
+            double[] profile = new double[] { ww_wall_x, ww_wall_y, ww_wall_x + 25, wall_ht + 10, ridge_x, ridge_y, ww_wall_x + 75, wall_ht + 10, lw_wall_x, lw_wall_y };
             BuildingInfo bldg = new SlopedRoofBuildingInfo(b, (lw_wall_x - ww_wall_x), 0.5 * (ridge_y + ww_wall_y), profile, RiskCategories.II);
 
+            // Create the wind provision model
             WindProvisions wind_prov = new WindProvisions(V, bldg, exp);
 
+            // Create the view model for the wind provisions
             WindVM = new WindViewModel(bldg, wind_prov);
+
+            // Set initial scale factors
+            SCALE_FACTOR_HORIZ = 0.6 * canvas.Width / WindVM.Bldg.L;
+            SCALE_FACTOR_VERT = 0.6 * canvas.Height / WindVM.Bldg.H;
+            SCALE_FACTOR = Math.Min(SCALE_FACTOR_HORIZ, SCALE_FACTOR_VERT);
+
+            // Independent scale factor for the pressure diagram
+            PRESSURE_SCALE_FACTOR = 0.6 * SCALE_FACTOR;
+
+            // Create the view model for the building object on its canvas
+            BuildingVM = new BuildingViewModel(canvas, bldg, SCALE_FACTOR);
         }
 
         /// <summary>
@@ -92,168 +105,13 @@ namespace WindCalculator
             OnUserUpdate();
         }
 
-        public static float ConvertDegToRad(float degrees)
-        {
-            return ((float)Math.PI / (float)180) * degrees;
-        }
-
-        public static Matrix4x4 GetTranslationMatrix(Vector3 position)
-        {
-            return new Matrix4x4(1, 0, 0, 0,
-                                0, 1, 0, 0,
-                                0, 0, 1, 0,
-                                position.X, position.Y, position.Z, 1);
-        }
-
-        public static Matrix4x4 GetRotationMatrix(Vector3 anglesDeg)
-        {
-            anglesDeg = new Vector3(ConvertDegToRad(anglesDeg.X), ConvertDegToRad(anglesDeg.Y), ConvertDegToRad(anglesDeg.Z));
-
-            Matrix4x4 rotationX = new Matrix4x4(1, 0, 0, 0,
-                                                0, (float)Math.Cos(anglesDeg.X), (float)Math.Sin(anglesDeg.X), 0,
-                                                0, (float)-Math.Sin(anglesDeg.X), (float)Math.Cos(anglesDeg.X), 0,
-                                                0, 0, 0, 1);
-
-            Matrix4x4 rotationY = new Matrix4x4((float)Math.Cos(anglesDeg.Y), 0, (float)-Math.Sin(anglesDeg.Y), 0,
-                                                0, 1, 0, 0,
-                                                (float)Math.Sin(anglesDeg.Y), 0, (float)Math.Cos(anglesDeg.Y), 0,
-                                                0, 0, 0, 1);
-
-            Matrix4x4 rotationZ = new Matrix4x4((float)Math.Cos(anglesDeg.Z), (float)Math.Sin(anglesDeg.Z), 0, 0,
-                                                (float)-Math.Sin(anglesDeg.Z), (float)Math.Cos(anglesDeg.Z), 0, 0,
-                                                0, 0, 1, 0,
-                                                0, 0, 0, 1);
-
-            return rotationX * rotationY * rotationZ;
-        }
-
-        public static Matrix4x4 GetScaleMatrix(Vector3 scale)
-        {
-            return new Matrix4x4(scale.X, 0, 0, 0,
-                                 0, scale.Y, 0, 0,
-                                 0, 0, scale.Z, 0,
-                                 0, 0, 0, 1);
-        }
-
-        public static Matrix4x4 Get_TRS_Matrix(Vector3 position, Vector3 rotationAngles, Vector3 scale)
-        {
-            return  GetTranslationMatrix(position) * GetRotationMatrix(rotationAngles) * GetScaleMatrix(scale);
-        }
-
-
         /// <summary>
-        /// Draws the building object
+        /// Draws the building object to the sspecified canvas
         /// </summary>
-        /// <param name="canvas"></param>
-        /// <param name="x_ww_grd"></param>
-        /// <param name="y_ww_grd"></param>
-        /// <param name="x_ww_15"></param>
-        /// <param name="y_ww_15"></param>
-        /// <param name="x_ww_h"></param>
-        /// <param name="y_ww_h"></param>
-        /// <param name="x_lw_grd"></param>
-        /// <param name="y_lw_grd"></param>
-        /// <param name="x_lw_h"></param>
-        /// <param name="y_lw_h"></param>
+        /// <param name="canvas">the canvas object to draw to</param>
         private void DrawStructure_Elevation(Canvas canvas)
         {
-            // retrieve our building object
-            BuildingInfo bldg = WindVM.Bldg;
-
-            // To reflect about vertical axis
-            Matrix4x4 x_reflect = new Matrix4x4(
-                -1.0f, 0.0f, 0.0f, 0.0f,
-                0.0f, 1.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f);
-
-            // To reflect about horizontal axis
-            Matrix4x4 y_reflect = new Matrix4x4(
-                1.0f, 0.0f, 0.0f, 0.0f,
-                0.0f, -1.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f);
-
-            // Parameters for translating, scaling, and rotating.
-            double x_trans = 0.5 * canvas.Width;
-            double y_trans = 0.5 * canvas.Height;
-            double z_trans = bldg.ORIGIN.Z;
-            double x_rot = 0.0;  // rotation about the horizonal x-axis
-            double y_rot = 0.0;  // rotation about the vertical y-axis
-            double z_rot = 0.0;  // rotation about the z axis (out of the screen)
-            double x_scale = SCALE_FACTOR; // x-dir scale
-            double y_scale = SCALE_FACTOR; // y-dir scale
-            double z_scale = SCALE_FACTOR; // z-dir scale
-
-            // Shift the origin of the building so that the mid height of the building is at 0,0 on the screen
-            Vector3 position = new Vector3((float)-bldg.ORIGIN.X, (float)(-bldg.ORIGIN.Y - 0.5 * bldg.H), (float)-bldg.ORIGIN.Z);
-            Vector3 rotation = new Vector3((float)x_rot, (float)y_rot, (float)z_rot);
-            Vector3 scale = new Vector3((float)x_scale, (float)y_scale, (float)z_scale);
-
-            // Apply the transform to move the center of the building building to the origin of the screen.
-            // 1. and 2. Applies scaling and rotation at this step via the TRS_Matrix
-            Matrix4x4 TRS_Matrix = Get_TRS_Matrix(position, rotation, scale);
-            Matrix4x4 transMatrix = GetTranslationMatrix(new Vector3((float)x_trans, (float)y_trans, (float)z_trans));
-            Matrix4x4 rotMatrix = GetRotationMatrix(new Vector3((float)x_rot, (float)y_rot, (float)z_rot));
-            Matrix4x4 scaleMatrix = GetScaleMatrix(new Vector3((float)x_scale, (float)y_scale, (float)z_scale));
-
-            // Reflect the y coords for the graphical display of Y+ downwards, by mirroring the struction about the horizontal x-axis
-            TRS_Matrix = TRS_Matrix * y_reflect;
-
-            // 3.Move image to center or canvas from 0,0
-            TRS_Matrix = TRS_Matrix * transMatrix;
-
-            //TODO:  Probably  shouldnt overwrite the original model geometry.
-            // Apply the transforms
-            bldg.ORIGIN = Vector4.Transform(bldg.ORIGIN, TRS_Matrix);
-            bldg.RIDGE_1 = Vector4.Transform(bldg.RIDGE_1, TRS_Matrix);
-            bldg.WW_GRD_1 = Vector4.Transform(bldg.WW_GRD_1, TRS_Matrix);
-            bldg.WW_15_1 = Vector4.Transform(bldg.WW_15_1, TRS_Matrix);
-            bldg.WW_H_1 = Vector4.Transform(bldg.WW_H_1, TRS_Matrix);
-            bldg.LW_GRD_1 = Vector4.Transform(bldg.LW_GRD_1, TRS_Matrix);
-            bldg.LW_15_1 = Vector4.Transform(bldg.LW_15_1, TRS_Matrix);
-            bldg.LW_H_1 = Vector4.Transform(bldg.LW_H_1, TRS_Matrix);
-
-            // Draw the WW wall object
-            DrawingHelpers.DrawLine(canvas, bldg.WW_GRD_1.X, bldg.WW_GRD_1.Y, bldg.LW_GRD_1.X, bldg.LW_GRD_1.Y, Brushes.Black, 3, Linetypes.LINETYPE_DASHED); ;
-
-            DrawingHelpers.DrawLine(canvas, bldg.WW_GRD_1.X,bldg.WW_GRD_1.Y, bldg.WW_15_1.X, bldg.WW_15_1.Y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID); ;
-            DrawingHelpers.DrawLine(canvas, bldg.WW_15_1.X, bldg.WW_15_1.Y, bldg.WW_H_1.X, bldg.WW_H_1.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); ;
-
-            // Draw the Roof object line
-            for (int i = 0; i < WindVM.Bldg.RoofProfile.Length - 2; i=i+2)
-            {
-                Vector4 pt1 = Vector4.Transform(new Vector3((float)bldg.RoofProfile[i + 0], (float)bldg.RoofProfile[i + 1], 0), TRS_Matrix);
-                Vector4 pt2 = Vector4.Transform(new Vector3((float)bldg.RoofProfile[i + 2], (float)bldg.RoofProfile[i + 3], 0), TRS_Matrix);
-
-                DrawingHelpers.DrawLine(canvas,pt1.X, pt1.Y, pt2.X, pt2.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
-            }
-
-            // Draw the LW object line
-            DrawingHelpers.DrawLine(canvas, bldg.LW_GRD_1.X, bldg.LW_GRD_1.Y, bldg.LW_15_1.X, bldg.LW_15_1.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); ;
-            DrawingHelpers.DrawLine(canvas, bldg.LW_15_1.X, bldg.LW_15_1.Y, bldg.LW_H_1.X, bldg.LW_H_1.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); ;
-
-            // Draw building dimensions
-            string dim_str;
-            // Horizontal Building Dimension
-            dim_str = (Math.Round(bldg.L * 100.0) / 100.0).ToString() + "'";
-            DrawingHelpers.DrawDimensionAligned(canvas, bldg.WW_GRD_1.X, bldg.WW_GRD_1.Y, bldg.LW_GRD_1.X, bldg.LW_GRD_1.Y, dim_str, STRUCTURE_DIM_TEXT_HT);
-
-            // Horizontal to Ridge
-            dim_str = (Math.Round((bldg.RIDGE_1.Y / SCALE_FACTOR) * 100.0) / 100.0).ToString() + "'";
-            DrawingHelpers.DrawDimensionAligned(canvas, bldg.WW_H_1.X, bldg.RIDGE_1.Y, bldg.RIDGE_1.X, bldg.RIDGE_1.Y, dim_str, STRUCTURE_DIM_TEXT_HT); ;
-
-            // LW wall
-            dim_str = (Math.Round(((bldg.LW_GRD_1.Y - bldg.LW_H_1.Y) / SCALE_FACTOR) * 100.0) / 100.0).ToString() + "'";
-            DrawingHelpers.DrawDimensionAligned(canvas, bldg.LW_H_1.X, bldg.LW_H_1.Y, bldg.LW_GRD_1.X, bldg.LW_GRD_1.Y, dim_str, STRUCTURE_DIM_TEXT_HT);
-
-            // WW wall
-            dim_str = (Math.Round(((bldg.WW_GRD_1.Y - bldg.WW_H_1.Y) / SCALE_FACTOR) * 100.0) / 100.0).ToString() + "'";
-            DrawingHelpers.DrawDimensionAligned(canvas, bldg.WW_GRD_1.X, bldg.WW_GRD_1.Y, bldg.WW_H_1.X, bldg.WW_H_1.Y, dim_str, STRUCTURE_DIM_TEXT_HT);
-
-            // Vertical to Ridge
-            dim_str = (Math.Round(((bldg.ORIGIN.Y - bldg.RIDGE_1.Y) / SCALE_FACTOR) * 100.0) / 100.0).ToString() + "'";
-            DrawingHelpers.DrawDimensionAligned(canvas, bldg.RIDGE_1.X, bldg.ORIGIN.Y, bldg.RIDGE_1.X, bldg.RIDGE_1.Y, dim_str, STRUCTURE_DIM_TEXT_HT); ;
+            BuildingVM.Draw(canvas, STRUCTURE_DIM_TEXT_HT);
         }
 
         /// <summary>
@@ -299,7 +157,6 @@ namespace WindCalculator
             double y_ph_lw = y_lw_h;
             double x_p0_lw = x_lw_grd - WindVM.Wind_Prov.P_H_LW * PRESSURE_SCALE_FACTOR;
             double y_p0_lw = y_lw_grd;
-
 
             // create our pressure label
             string pressure_str;
@@ -398,14 +255,6 @@ namespace WindCalculator
         /// <param name="canvas"></param>
         protected void Draw(Canvas canvas)
         {
-            // Set initial scale factors
-            SCALE_FACTOR_HORIZ = 0.6 * canvas.Width / WindVM.Bldg.L;
-            SCALE_FACTOR_VERT = 0.6 * canvas.Height / WindVM.Bldg.H;
-            SCALE_FACTOR = Math.Min(SCALE_FACTOR_HORIZ, SCALE_FACTOR_VERT);
-
-            // Independent scale factor for the pressure diagram
-            PRESSURE_SCALE_FACTOR = 0.6 * SCALE_FACTOR;
-
             // Center point of current canvas
             double x_center = canvas.Width * 0.5;
             double y_center = canvas.Height * 0.5;
