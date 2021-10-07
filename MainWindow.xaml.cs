@@ -21,10 +21,7 @@ namespace WindCalculator
         double SCALE_FACTOR_HORIZ;
         double SCALE_FACTOR_VERT;
         double SCALE_FACTOR;
-        //double SCALE_FACTOR = 1.0;
 
-        // Independent scale factor for the pressure diagram
-        double PRESSURE_SCALE_FACTOR;
         /// <summary>
         /// The WindProvision view model for this graphic.
         /// </summary>
@@ -36,6 +33,11 @@ namespace WindCalculator
         public BuildingViewModel BuildingVM_3 { get; set; }
         public BuildingViewModel BuildingVM_4 { get; set; }
 
+        // PressureViewModel for each Canvas
+        public PressureViewModel PressureVM_1 { get; set; }
+        public PressureViewModel PressureVM_2 { get; set; }
+        public PressureViewModel PressureVM_3 { get; set; }
+        public PressureViewModel PressureVM_4 { get; set; }
 
         public MainWindow()
         {
@@ -55,10 +57,10 @@ namespace WindCalculator
         /// </summary>
         private void OnUserUpdate()
         {
-            Draw(MainCanvas, BuildingVM_1);
-            Draw(Canvas2, BuildingVM_2);
-            Draw(Canvas3, BuildingVM_3);
-            Draw(Canvas4, BuildingVM_4);
+            Draw(MainCanvas, BuildingVM_1, PressureVM_1);
+            Draw(Canvas2, BuildingVM_2, PressureVM_2);
+            Draw(Canvas3, BuildingVM_3, PressureVM_3);
+            Draw(Canvas4, BuildingVM_4, PressureVM_4);
         }
 
         /// <summary>
@@ -84,13 +86,13 @@ namespace WindCalculator
             // TODO:: Need to sort the order of these points or provide some sort of logic (left-to-right) progression of points
 
             ////TESTING: Sloped roof profile
-            double[] profile = new double[] { ww_wall_x, ww_wall_y, ww_wall_x + 25, wall_ht + 10, ridge_x, ridge_y, ww_wall_x + 75, wall_ht + 10, lw_wall_x, lw_wall_y };
-            BuildingInfo bldg = new SlopedRoofBuildingInfo(b, (lw_wall_x - ww_wall_x), 0.5 * (ridge_y + ww_wall_y), profile, RiskCategories.II);
+            //double[] profile = new double[] { ww_wall_x, ww_wall_y, ww_wall_x + 25, wall_ht + 10, ridge_x, ridge_y, ww_wall_x + 75, wall_ht + 10, lw_wall_x, lw_wall_y };
+            //BuildingInfo bldg = new SlopedRoofBuildingInfo(b, (lw_wall_x - ww_wall_x), 0.5 * (ridge_y + ww_wall_y), profile, RiskCategories.II);
 
 
             ////TESTING: flat roof profile
-            //double[] profile = new double[] { ww_wall_x, ww_wall_y, lw_wall_x, lw_wall_y };
-            //BuildingInfo bldg = new BuildingInfo(b, (lw_wall_x - ww_wall_x), 0.5 * (ridge_y + ww_wall_y), profile, RiskCategories.II);
+            double[] profile = new double[] { ww_wall_x, ww_wall_y, lw_wall_x, lw_wall_y };
+            BuildingInfo bldg = new BuildingInfo(b, (lw_wall_x - ww_wall_x), 0.5 * (ridge_y + ww_wall_y), profile, RiskCategories.II);
 
             // Create the wind provision model
             WindProvisions wind_prov = new WindProvisions(V, bldg, exp);
@@ -103,23 +105,24 @@ namespace WindCalculator
             SCALE_FACTOR_VERT = 0.6 * canvas.Height / WindVM.Bldg.H;
             SCALE_FACTOR = Math.Min(SCALE_FACTOR_HORIZ, SCALE_FACTOR_VERT);
 
-            // Independent scale factor for the pressure diagram
-            PRESSURE_SCALE_FACTOR = 0.6 * SCALE_FACTOR;
-
             // Create the view models for the building object on its canvas
             switch (canvas.Name)
             {
                 case "MainCanvas":
                     BuildingVM_1 = new BuildingViewModel(canvas, bldg, SCALE_FACTOR);
+                    PressureVM_1 = new PressureViewModel(canvas, WindVM.Wind_Prov, BuildingVM_1, "Normal to Ridge - Case A");
                     break;
                 case "Canvas2":
                     BuildingVM_2 = new BuildingViewModel(canvas, bldg, SCALE_FACTOR);
+                    PressureVM_2 = new PressureViewModel(canvas, WindVM.Wind_Prov, BuildingVM_2,  "Normal to Ridge - Case B");
                     break;
                 case "Canvas3":
                     BuildingVM_3 = new BuildingViewModel(canvas, bldg, SCALE_FACTOR);
+                    PressureVM_3 = new PressureViewModel(canvas, WindVM.Wind_Prov, BuildingVM_3, "Parallel to Ridge - Case A");
                     break;
                 case "Canvas4":
                     BuildingVM_4 = new BuildingViewModel(canvas, bldg, SCALE_FACTOR);
+                    PressureVM_4 = new PressureViewModel(canvas, WindVM.Wind_Prov, BuildingVM_4, "Parallel to Ridge - Case B");
                     break;
                 default:
                     break;
@@ -159,80 +162,9 @@ namespace WindCalculator
         /// <param name="y_lw_grd"></param>
         /// <param name="x_lw_h"></param>
         /// <param name="y_lw_h"></param>
-        private void DrawWallPressure_Elevation(Canvas canvas, double x_ww_grd, double y_ww_grd, double x_ww_15, double y_ww_15, double x_ww_h, double y_ww_h, double x_lw_grd, double y_lw_grd, double x_lw_h, double y_lw_h)
+        private void DrawWallPressure_Elevation(Canvas canvas, PressureViewModel pressure_view_model)
         {
-            // Dynamic pressure q coordinates for WW
-            double x_q0_ww = x_ww_grd - WindVM.Wind_Prov.Q_0 * PRESSURE_SCALE_FACTOR;
-            double y_q0_ww = y_ww_grd;
-            double x_q15_ww = x_ww_15 - WindVM.Wind_Prov.Q_15 * PRESSURE_SCALE_FACTOR;
-            double y_q15_ww = y_ww_15;
-            double x_qh_ww = x_ww_h - WindVM.Wind_Prov.Q_H * PRESSURE_SCALE_FACTOR;
-            double y_qh_ww = y_ww_h;
-
-            // for LW
-            double x_qh_lw = x_lw_h + WindVM.Wind_Prov.Q_H * PRESSURE_SCALE_FACTOR;
-            double y_qh_lw = y_lw_h;
-            double x_q0_lw = x_lw_grd + WindVM.Wind_Prov.Q_H * PRESSURE_SCALE_FACTOR;
-            double y_q0_lw = y_lw_grd;
-
-            // Pressure p = G Cp q values coordinates for WW
-            double x_p0_ww = x_ww_grd - WindVM.Wind_Prov.P_0_WW * PRESSURE_SCALE_FACTOR;
-            double y_p0_ww = y_ww_grd;
-            double x_p15_ww = x_ww_15 - WindVM.Wind_Prov.P_15_WW * PRESSURE_SCALE_FACTOR;
-            double y_p15_ww = y_ww_15;
-            double x_ph_ww = x_ww_h - WindVM.Wind_Prov.P_H_WW * PRESSURE_SCALE_FACTOR;
-            double y_ph_ww = y_ww_h;
-
-            // LW pressure points.  Subtraction here because LW wall pressures are suction (negative);
-            double x_ph_lw = x_lw_h - WindVM.Wind_Prov.P_H_LW * PRESSURE_SCALE_FACTOR;
-            double y_ph_lw = y_lw_h;
-            double x_p0_lw = x_lw_grd - WindVM.Wind_Prov.P_H_LW * PRESSURE_SCALE_FACTOR;
-            double y_p0_lw = y_lw_grd;
-
-            // create our pressure label
-            string pressure_str;
-
-            // Draw the WW Pressure Profile.
-            // p0 pressure line
-            DrawingHelpers.DrawLine(canvas, x_p0_ww, y_p0_ww, x_ww_grd, y_ww_grd, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-            pressure_str = (Math.Round(WindVM.Wind_Prov.P_0_WW * 100.0) / 100.0).ToString();
-            DrawingHelpers.DrawText(canvas, x_p0_ww, y_p0_ww, 0, pressure_str, Brushes.Blue, PRESSURE_TEXT_HT);
-
-            // Ph pressure line
-            DrawingHelpers.DrawLine(canvas, x_ph_ww, y_ph_ww, x_ww_h, y_ww_h, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-            pressure_str = (Math.Round(WindVM.Wind_Prov.P_H_WW * 100.0) / 100.0).ToString();
-            DrawingHelpers.DrawText(canvas, x_ph_ww, y_ph_ww, 0, pressure_str, Brushes.Blue, PRESSURE_TEXT_HT);
-
-            // show the 15' WW wall pressure location if necessary.
-            if (WindVM.Bldg.H > 15)
-            {
-                // Negative here pulls the dimension to the left
-                DrawingHelpers.DrawDimensionAligned(canvas, x_p15_ww, y_p15_ww, x_p0_ww, y_p0_ww, "15'", PRESSURE_TEXT_HT,
-                    -30, -0.3, -5, -10, DrawingHelpers.DEFAULT_DIM_LEADER_COLOR, DrawingHelpers.DEFAULT_DIM_LINETYPE);
-
-                // Q15 pressure line
-                DrawingHelpers.DrawLine(canvas, x_p15_ww, y_p15_ww, x_ww_15, y_ww_15, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-                pressure_str = (Math.Round(WindVM.Wind_Prov.P_15_WW * 100.0) / 100.0).ToString();
-                DrawingHelpers.DrawText(canvas, x_p15_ww, y_p15_ww, 0, pressure_str.ToString(), Brushes.Blue, PRESSURE_TEXT_HT);
-            }
-
-            // Draw lines between pressure points
-            DrawingHelpers.DrawLine(canvas, x_p0_ww, y_p0_ww, x_p15_ww, y_p15_ww, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-            DrawingHelpers.DrawLine(canvas, x_p15_ww, y_p15_ww, x_ph_ww, y_ph_ww, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-
-            // Draw the LW Pressure Proile.
-            // p0 pressure line
-            DrawingHelpers.DrawLine(canvas, x_p0_lw, y_p0_lw, x_lw_grd, y_lw_grd, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-            pressure_str = (Math.Round(WindVM.Wind_Prov.P_H_LW * 100.0) / 100.0).ToString();
-            DrawingHelpers.DrawText(canvas, x_p0_lw, y_p0_ww, 0, pressure_str, Brushes.Blue, PRESSURE_TEXT_HT);
-
-            // Ph pressure line
-            DrawingHelpers.DrawLine(canvas, x_ph_lw, y_ph_lw, x_lw_h, y_lw_h, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
-            pressure_str = (Math.Round(WindVM.Wind_Prov.P_H_LW * 100.0) / 100.0).ToString();
-            DrawingHelpers.DrawText(canvas, x_ph_lw, y_ph_lw, 0, pressure_str, Brushes.Blue, PRESSURE_TEXT_HT);
-
-            // Draw lines between LW pressure points
-            DrawingHelpers.DrawLine(canvas, x_p0_lw, y_p0_lw, x_ph_lw, y_ph_lw, Brushes.Blue, 1, Linetypes.LINETYPE_DASHED);
+            pressure_view_model.Draw(canvas, PRESSURE_TEXT_HT);
         }
 
         /// <summary>
@@ -251,32 +183,25 @@ namespace WindCalculator
         /// <param name="y_lw_h"></param>
         private void DrawRoofPressure_Elevation(Canvas canvas, double x_ww_grd, double y_ww_grd, double x_center, double y_center, double x_ww_h, double y_ww_h, double x_lw_grd, double y_lw_grd, double x_lw_h, double y_lw_h)
         {
-            string title_str = "";
             // TODO:: NEED TO FIX SLOPED ROOF TOO
             // Draw the flat roof pressure cases
             if (canvas == MainCanvas)
             {
-                title_str = "Normal to Ridge - Case A";
-                DrawPressureRoof(canvas, x_ww_h, y_ww_h, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA);
+                DrawPressureRoof(canvas, x_ww_h, y_ww_h, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEA, BuildingVM_1, PressureVM_1);
             }
             else if (canvas == Canvas2)
             {
-                title_str = "Normal to Ridge - Case B";
-                DrawPressureRoof(canvas, x_ww_h, y_ww_h, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB);
+                DrawPressureRoof(canvas, x_ww_h, y_ww_h, WindVM.Wind_Prov.P_H_ROOF_WW_NORMAL_CASEB, BuildingVM_2, PressureVM_2);
             }
             else if (canvas == Canvas3)
             {
-                title_str = "Parallel to Ridge - Case A";
-                DrawPressureRoof(canvas, x_ww_h, y_ww_h, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA);
+                DrawPressureRoof(canvas, x_ww_h, y_ww_h, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEA, BuildingVM_3, PressureVM_3);
             }
             else if (canvas == Canvas4)
             {
-                title_str = "Parallel to Ridge - Case B";
-                DrawPressureRoof(canvas, x_ww_h, y_ww_h, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB);
+                DrawPressureRoof(canvas, x_ww_h, y_ww_h, WindVM.Wind_Prov.P_H_ROOF_WW_PARALLEL_CASEB, BuildingVM_4, PressureVM_4);
             }
 
-            // Draws the title for each picture based on the roof pressure diagram being generated.
-            DrawingHelpers.DrawText(canvas, x_center - 130, y_ww_grd + 50, 0, title_str, Brushes.Black, 25);
 
         }
 
@@ -284,7 +209,7 @@ namespace WindCalculator
         /// the main drawing function for the canvas object
         /// </summary>
         /// <param name="canvas"></param>
-        protected void Draw(Canvas canvas, BuildingViewModel view_model)
+        protected void Draw(Canvas canvas, BuildingViewModel view_model, PressureViewModel pressure_view_model)
         {
             // Center point of current canvas
             double x_center = canvas.Width * 0.5;
@@ -319,8 +244,8 @@ namespace WindCalculator
             // Draw the building object
             DrawStructure_Elevation(canvas, view_model);
 
-            // Draw the wall pressures
-            DrawWallPressure_Elevation(canvas, x_ww_grd, y_ww_grd, x_ww_15, y_ww_15, x_ww_h, y_ww_h, x_lw_grd, y_lw_grd, x_lw_h, y_lw_h);
+            // Draw elevation view of WW and LW wall pressures
+            DrawWallPressure_Elevation(canvas, pressure_view_model);
 
             // Draw the roof pressures
             DrawRoofPressure_Elevation(canvas, x_ww_grd, y_ww_grd, x_center, y_center, x_ww_h, y_ww_h, x_lw_grd, y_lw_grd, x_lw_h, y_lw_h);
@@ -337,26 +262,35 @@ namespace WindCalculator
         /// <param name="y_ww_grd">y position of ground elev at windward wall</param>
         /// <param name="o_scale">scale factor for object lines (building)</param>
         /// <param name="p_scale">scale factor for the pressure items</param>
-        private void DrawPressureRoof(Canvas canvas, double x_ww_h, double y_ww_h, double[] arr)
+        private void DrawPressureRoof(Canvas canvas, double x_ww_h, double y_ww_h, double[] arr, BuildingViewModel bldg_vm, PressureViewModel press_vm)
         {
+
             for (int i = 0; i < WindVM.Bldg.RoofZonePts.Length / 2.0; i++)
             {
-                double x_p1 = x_ww_h +  WindVM.Bldg.RoofZonePts[2*i] * SCALE_FACTOR;
-                double x_p2 = x_ww_h +  WindVM.Bldg.RoofZonePts[2*i+1] * SCALE_FACTOR;
-                double y_p = y_ww_h - arr[i] * PRESSURE_SCALE_FACTOR;
+                double y_p = arr[i] * press_vm.PRESSURE_SCALE_FACTOR;
 
-                // If the region has zero length, skip to the next region and don't illustrate it
-                if(x_p1 == x_p2)
-                {
-                    continue;
-                }
+                //// If the region has zero length, skip to the next region and don't illustrate it
+                //if (x_p1 == x_p2)
+                //{
+                //    continue;
+                //}
 
                 // create our pressure label
                 string pressure_str = (Math.Round(arr[i] * 100.0) / 100.0).ToString();
 
-                DrawingHelpers.DrawRectangle(canvas, x_p1, y_ww_h, (x_p2 - x_p1), y_p - y_ww_h, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
-                DrawingHelpers.DrawText(canvas, x_p1, y_p, 0, pressure_str, Brushes.Red, PRESSURE_TEXT_HT);
-                DrawingHelpers.DrawDimensionAligned(canvas, x_p1, y_ww_h, x_p2, y_ww_h, "Z" + (i+1).ToString(), 10);
+                DrawingHelpers.DrawRectangleAligned_Base(canvas, bldg_vm.RoofZonePoints_SC[2 * i].X, 
+                    bldg_vm.RoofZonePoints_SC[2 * i].Y, 
+                    bldg_vm.RoofZonePoints_SC[2 * i + 1].X,
+                    bldg_vm.RoofZonePoints_SC[2 * i + 1].Y,
+                    y_p, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+                DrawingHelpers.DrawText(canvas, bldg_vm.RoofZonePoints_SC[2 * i].X, bldg_vm.RoofZonePoints_SC[2 * i].Y - y_p, 0, pressure_str, Brushes.Red, PRESSURE_TEXT_HT);
+
+                DrawingHelpers.DrawDimensionAligned(canvas,
+                    bldg_vm.RoofZonePoints_SC[2 * i].X, 
+                    bldg_vm.RoofZonePoints_SC[2 * i].Y,
+                    bldg_vm.RoofZonePoints_SC[2 * i + 1].X,
+                    bldg_vm.RoofZonePoints_SC[2 * i + 1].Y,
+                    "Z" + (i+1).ToString(), 10);
             }
         }
     }

@@ -57,6 +57,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ViewModel\BuildingViewModel.cs" />
+    <Compile Include="ViewModel\PressureViewModel.cs" />
     <Compile Include="ViewModel\WindViewModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

@@ -39,6 +39,13 @@ namespace WindCalculator.ViewModel
 
         public Vector4[] RoofProfile_SC { get; set; }
 
+        /// <summary>
+        /// Pressure zone points in screen coordinates
+        /// </summary>
+        public Vector4[] RoofZonePoints_SC { get; set; }
+
+        public double SCALE_FACTOR {get; set;}
+
         Matrix4x4 TRANS_Matrix { get; set; }
         Matrix4x4 SCALE_Matrix { get; set; }
         Matrix4x4 ROT_Matrix { get; set; }
@@ -51,6 +58,7 @@ namespace WindCalculator.ViewModel
         public BuildingViewModel(Canvas canvas, BuildingInfo bldg, double drawing_scale_factor)
         {
             Model = bldg;
+            SCALE_FACTOR = drawing_scale_factor;
 
             // Parameters for translating, scaling, and rotating.
             double x_trans = 0.5 * canvas.Width;
@@ -109,6 +117,16 @@ namespace WindCalculator.ViewModel
                 // TODO:: need a better way to handle the Z coord
                 RoofProfile_SC[i / 2] = Vector4.Transform(new Vector3((float)bldg.RoofProfile[i + 0], (float)bldg.RoofProfile[i + 1], 0), TRS_Matrix);
             }
+
+            // Create the screen coordinates for the pressure zone points
+            int count = 0;
+            RoofZonePoints_SC = new Vector4[bldg.RoofZonePts.Length];
+            foreach (var item in bldg.RoofZonePts)
+            {
+                RoofZonePoints_SC[count] = Vector4.Transform(new Vector3(item.X, item.Y, 0), TRS_Matrix);
+                count++;
+
+            }
         }
 
         public void Draw(Canvas canvas, double dim_text_ht)
@@ -161,7 +179,6 @@ namespace WindCalculator.ViewModel
                 dim_str = (Math.Round((Model.LW_H_1.X - Model.RIDGE_1.X) * 100.0) / 100.0).ToString() + "'";
                 DrawingHelpers.DrawDimensionAligned(canvas, LW_H_1_SC.X, RIDGE_1_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht); ;
             }
-
         }
 
         public static float ConvertDegToRad(float degrees)
