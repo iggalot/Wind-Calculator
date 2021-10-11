@@ -19,6 +19,9 @@ namespace WindCalculator.ViewModel
         string Title { get; set; }
 
 
+        /// <summary>
+        /// Wall pressure screen coords
+        /// </summary>
         public Vector4 WW_P0_1_SC { get; set; }
         public Vector4 WW_P15_1_SC { get; set; }
         public Vector4 WW_PH_1_SC { get; set; }
@@ -27,8 +30,16 @@ namespace WindCalculator.ViewModel
         public Vector4 LW_P15_1_SC { get; set; }
         public Vector4 LW_PH_1_SC { get; set; }
 
+        public double[] RoofCaseA { get; set; }
+        public double[] RoofCaseB { get; set; }
 
-        public PressureViewModel(Canvas canvas, WindProvisions wind_prov, BuildingViewModel bldg_vm, string title)
+        //public Vector4 ROOF_WW_Z1_START_SC { get; set; }
+        //public Vector4 ROOF_WW_Z1_END_SC { get; set; }
+
+        //public Vector4 ROOF_LW_Z1_START_SC { get; set; }
+        //public Vector4 ROOF_LW_Z1_END_SC { get; set; }
+
+        public PressureViewModel(Canvas canvas, WindProvisions wind_prov, BuildingViewModel bldg_vm, string title, WindOrientations orient, WindCasesDesignation wind_case)
         {
             PRESSURE_SCALE_FACTOR = 0.6 * bldg_vm.SCALE_FACTOR;
 
@@ -51,7 +62,7 @@ namespace WindCalculator.ViewModel
             string pressure_str;
 
             // Draws the title for each picture based on the roof pressure diagram being generated.
-            DrawingHelpers.DrawText(canvas, BuildingVM.ORIGIN_SC.X - 130, BuildingVM.ORIGIN_SC.Y + 50, 0, Title, Brushes.Black, DEFAULT_TITLE_HT);
+            DrawingHelpers.DrawText(canvas, BuildingVM.ORIGIN_1_SC.X - 130, BuildingVM.ORIGIN_1_SC.Y + 50, 0, Title, Brushes.Black, DEFAULT_TITLE_HT);
 
 
             /////////////////////
@@ -106,14 +117,70 @@ namespace WindCalculator.ViewModel
             // DRAW ROOF PRESSURES
             /////////////////////
             // Is it a flat roof scenario?
-            if(BuildingVM.Model.HasSingleRidge == false)
-            {
+//            if(BuildingVM.Model.HasSingleRidge == false)
+ //           {
+                //DrawPressureRoof(Canvas canvas);
 
-            } else
-            {
-                DrawingHelpers.DrawText(canvas, BuildingVM.ORIGIN_SC.X - 130, BuildingVM.ORIGIN_SC.Y - 50, 0, "No Calcs Available for roof", Brushes.Red, DEFAULT_TITLE_HT);
+//            } else
+//            {
+//                DrawingHelpers.DrawText(canvas, BuildingVM.ORIGIN_1_SC.X - 130, BuildingVM.ORIGIN_1_SC.Y - 50, 0, "No Calcs Available for roof", Brushes.Red, DEFAULT_TITLE_HT);
 
-            }
+//            }
+        }
+        //public override void DrawPressureRoof(Canvas canvas, double[] arr, BuildingViewModel bldg_vm, PressureViewModel press_vm)
+        //{
+
+        //}
+        /// <summary>
+        /// Function to draw the roof pressures
+        /// </summary>
+        /// <param name="canvas"></param>
+        private void DrawRoofPressure_Elevation(Canvas canvas)
+        {
+ //           DrawPressureRoof(canvas, Wind_Prov, BuildingVM, PressureVM);
+        }
+
+        /// <summary>
+        // Draws the wind pressure diagram for a roof
+        /// </summary>
+        /// <param name="x_ww_h">x position of top of windward wall</param>
+        /// <param name="y_ww_h">y position of top of windward wall</param>
+        /// <param name="x_center">x position of center of the canvas</param>
+        /// <param name="y_center">y position of center of the canvas</param>
+        /// <param name="x_ww_grd">x position of ground elev at windward wall</param>
+        /// <param name="y_ww_grd">y position of ground elev at windward wall</param>
+        /// <param name="o_scale">scale factor for object lines (building)</param>
+        /// <param name="p_scale">scale factor for the pressure items</param>
+        public virtual void DrawPressureRoof(Canvas canvas, double[] arr, BuildingViewModel bldg_vm, PressureViewModel press_vm)
+        {
+
+            //for (int i = 0; i < WindVM_East.Bldg.RoofZonePts_1.Length / 2.0; i++)
+            //{
+            //    double y_p = arr[i] * press_vm.PRESSURE_SCALE_FACTOR;
+
+            //    //// If the region has zero length, skip to the next region and don't illustrate it
+            //    //if (x_p1 == x_p2)
+            //    //{
+            //    //    continue;
+            //    //}
+
+            //    // create our pressure label
+            //    string pressure_str = (Math.Round(arr[i] * 100.0) / 100.0).ToString();
+
+            //    DrawingHelpers.DrawRectangleAligned_Base(canvas, bldg_vm.RoofZonePoints_1_SC[2 * i].X,
+            //        bldg_vm.RoofZonePoints_1_SC[2 * i].Y,
+            //        bldg_vm.RoofZonePoints_1_SC[2 * i + 1].X,
+            //        bldg_vm.RoofZonePoints_1_SC[2 * i + 1].Y,
+            //        y_p, Brushes.Red, 1, Linetypes.LINETYPE_DASHED);
+            //    DrawingHelpers.DrawText(canvas, bldg_vm.RoofZonePoints_1_SC[2 * i].X, bldg_vm.RoofZonePoints_1_SC[2 * i].Y - y_p, 0, pressure_str, Brushes.Red, PRESSURE_TEXT_HT);
+
+            //    DrawingHelpers.DrawDimensionAligned(canvas,
+            //        bldg_vm.RoofZonePoints_1_SC[2 * i].X,
+            //        bldg_vm.RoofZonePoints_1_SC[2 * i].Y,
+            //        bldg_vm.RoofZonePoints_1_SC[2 * i + 1].X,
+            //        bldg_vm.RoofZonePoints_1_SC[2 * i + 1].Y,
+            //        "Z" + (i + 1).ToString(), 10);
+            //}
         }
     }
 }
