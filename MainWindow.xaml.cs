@@ -87,8 +87,8 @@ namespace WindCalculator
             //BuildingInfo bldg_North = new SlopedRoofBuildingInfo(profile_north_1, profile_north_2, RoofSlopeTypes.ROOF_SLOPE_FLAT, risk_cat);
 
             ////TESTING: flat roof profile
-            BuildingInfo bldg_East = new BuildingInfo(profile_east_1, profile_east_2, RoofSlopeTypes.ROOF_SLOPE_FLAT, risk_cat);
-            BuildingInfo bldg_North = new BuildingInfo(profile_north_1, profile_north_2, RoofSlopeTypes.ROOF_SLOPE_FLAT, risk_cat);
+            BuildingInfo bldg_East = new BuildingInfo(profile_east_1, profile_east_2, RoofSlopeTypes.ROOF_SLOPE_FLAT, risk_cat, WindOrientations.WIND_ORIENTATION_NORMALTORIDGE);
+            BuildingInfo bldg_North = new BuildingInfo(profile_north_1, profile_north_2, RoofSlopeTypes.ROOF_SLOPE_FLAT, risk_cat, WindOrientations.WIND_ORIENTATION_PARALLELTORIDGE);
 
             // Create the wind provision models for wind in the east (perpendicular to ridge) and in the north (parallel to ridge)
             WindProvisions wind_prov_east = new WindProvisions(V, bldg_East, exp);

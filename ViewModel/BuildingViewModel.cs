@@ -4,26 +4,13 @@ using System;
 using System.Numerics;
 using System.Windows.Controls;
 using System.Windows.Media;
+using WindCalculator.Model;
 
 namespace WindCalculator.ViewModel
 {
     public class BuildingViewModel
     {
         public BuildingInfo Model { get; set; }
-
-        // To reflect about vertical axis
-        Matrix4x4 x_reflect = new Matrix4x4(
-            -1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f);
-
-        // To reflect about horizontal axis
-        Matrix4x4 y_reflect = new Matrix4x4(
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, -1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f);
 
         public Vector4 WW_GRD_1_SC { get; set; }
         public Vector4 WW_15_1_SC { get; set; }
@@ -58,9 +45,9 @@ namespace WindCalculator.ViewModel
 
         public double SCALE_FACTOR {get; set;}
 
-        Matrix4x4 TRANS_Matrix { get; set; }
-        Matrix4x4 SCALE_Matrix { get; set; }
-        Matrix4x4 ROT_Matrix { get; set; }
+        public WindOrientations WindOrient { get; set; } = WindOrientations.WIND_ORIENTATION_NORMALTORIDGE;
+
+
 
         /// <summary>
         /// Our combined transformation matrix from world to pixel coords
@@ -71,48 +58,11 @@ namespace WindCalculator.ViewModel
         {
             Model = bldg;
             SCALE_FACTOR = drawing_scale_factor;
+            WindOrient = orient;
 
-            // Parameters for translating, scaling, and rotating.
-            double x_trans = 0.5 * canvas.Width;
-            double y_trans = 0.5 * canvas.Height;
-            double z_trans = bldg.ORIGIN_1.Z;
-            double x_rot = 0.0;  // rotation about the horizonal x-axis
-
-            double y_rot = 0.0;  // rotation about the vertical y-axis
-
-            //If this is a parallel wind view model, need to rotate the graphic by 90 degrees about the y-axis so we can see it
-            if (orient == WindOrientations.WIND_ORIENTATION_PARALLELTORIDGE)
-            {
-                y_rot = 90;
-            }
-
-            double z_rot = 0.0;  // rotation about the z axis (out of the screen)
-
-            double x_scale = drawing_scale_factor; // x-dir scale
-            double y_scale = drawing_scale_factor; // y-dir scale
-            double z_scale = drawing_scale_factor; // z-dir scale
-
-            // Shift the origin of the building so that the mid height of the building is at 0,0 on the screen
-            Vector3 position = new Vector3((float)-bldg.ORIGIN_1.X, (float)(-bldg.ORIGIN_1.Y - 0.5 * bldg.H), (float)-bldg.ORIGIN_1.Z);
-            Vector3 rotation = new Vector3((float)x_rot, (float)y_rot, (float)z_rot);
-            Vector3 scale = new Vector3((float)x_scale, (float)y_scale, (float)z_scale);
-
-            // Apply the transform to move the center of the building building to the origin of the screen.
-            // 1. and 2. Applies scaling and rotation at this step via the TRS_Matrix
-            Matrix4x4 TRS_Matrix = Get_TRS_Matrix(position, rotation, scale);
-            Matrix4x4 transMatrix = GetTranslationMatrix(new Vector3((float)x_trans, (float)y_trans, (float)z_trans));
-            Matrix4x4 rotMatrix = GetRotationMatrix(new Vector3((float)x_rot, (float)y_rot, (float)z_rot));
-            Matrix4x4 scaleMatrix = GetScaleMatrix(new Vector3((float)x_scale, (float)y_scale, (float)z_scale));
-
-            // Reflect the y coords for the graphical display of Y+ downwards, by mirroring the struction about the horizontal x-axis
-            TRS_Matrix = TRS_Matrix * y_reflect;
-
-            // 3.Move image to center or canvas from 0,0
-            TRS_Matrix = TRS_Matrix * transMatrix;
-
-            TRANS_Matrix = transMatrix;
-            SCALE_Matrix = scaleMatrix;
-            ROT_Matrix = rotMatrix;
+            // Create our TRS transform for the window
+            TRS_Matrix_Transform new_transform = new TRS_Matrix_Transform(bldg, 0.5 * canvas.Width, 0.5 * canvas.Height, bldg.ORIGIN_1.Z, 0.0, 0.0, 0.0, SCALE_FACTOR, orient);
+            TRS_Matrix = new_transform.GetTRSMatrix;
 
             // Apply the transforms to get screen coords
             ORIGIN_1_SC = Vector4.Transform(bldg.ORIGIN_1, TRS_Matrix);
@@ -158,127 +108,131 @@ namespace WindCalculator.ViewModel
 
         public void Draw(Canvas canvas, double dim_text_ht)
         {
-            // Draw the WW wall object for frame #1
-            DrawingHelpers.DrawLine(canvas, WW_GRD_1_SC.X, WW_GRD_1_SC.Y, LW_GRD_1_SC.X, LW_GRD_1_SC.Y, Brushes.Black, 3, Linetypes.LINETYPE_DASHED); ;
+            // WW points frame1
+            double pt1_x, pt1_y, pt2_x, pt2_y, pt3_x, pt3_y;
 
-            DrawingHelpers.DrawLine(canvas, WW_GRD_1_SC.X, WW_GRD_1_SC.Y, WW_15_1_SC.X, WW_15_1_SC.Y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID); ;
-            DrawingHelpers.DrawLine(canvas, WW_15_1_SC.X, WW_15_1_SC.Y, WW_H_1_SC.X,WW_H_1_SC.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); ;
+            // WW points frame2
+            double pt4_x, pt4_y, pt5_x, pt5_y, pt6_x, pt6_y;
+
+            // LW points frame 1
+            double pt7_x, pt7_y, pt8_x, pt8_y, pt9_x, pt9_y;
+
+            // LW points frame 2
+            double pt10_x, pt10_y, pt11_x, pt11_y, pt12_x, pt12_y;
+
+            pt1_x = WW_GRD_1_SC.X;
+            pt1_y = WW_GRD_1_SC.Y;
+            pt2_x = WW_15_1_SC.X;
+            pt2_y = WW_15_1_SC.Y;
+            pt3_x = WW_H_1_SC.X;
+            pt3_y = WW_H_1_SC.Y;
+
+            pt4_x = WW_GRD_2_SC.X;
+            pt4_y = WW_GRD_2_SC.Y;
+            pt5_x = WW_15_2_SC.X;
+            pt5_y = WW_15_2_SC.Y;
+            pt6_x = WW_H_2_SC.X;
+            pt6_y = WW_H_2_SC.Y;
+
+            pt7_x = LW_GRD_1_SC.X;
+            pt7_y = LW_GRD_1_SC.Y;
+            pt8_x = LW_15_1_SC.X;
+            pt8_y = LW_15_1_SC.Y;
+            pt9_x = LW_H_1_SC.X;
+            pt9_y = LW_H_1_SC.Y;
+
+            pt10_x = LW_GRD_2_SC.X;
+            pt10_y = LW_GRD_2_SC.Y;
+            pt11_x = LW_15_2_SC.X;
+            pt11_y = LW_15_2_SC.Y;
+            pt12_x = LW_H_2_SC.X;
+            pt12_y = LW_H_2_SC.Y;
+
+            // Draw the ground
+            //DrawingHelpers.DrawLine(canvas, WW_GRD_1_SC.X, WW_GRD_1_SC.Y, LW_GRD_1_SC.X, LW_GRD_1_SC.Y, Brushes.Black, 3, Linetypes.LINETYPE_DASHED); ;
+            DrawingHelpers.DrawLine(canvas, pt1_x, pt1_y, pt7_x, pt7_y, Brushes.Black, 3, Linetypes.LINETYPE_DASHED); ;
+
+            // Draw the WW wall object for frame #1
+            DrawingHelpers.DrawLine(canvas, pt1_x, pt1_y, pt2_x, pt2_y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID);   // 0-15 WW
+            DrawingHelpers.DrawLine(canvas, pt2_x, pt2_y, pt3_x, pt3_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); // 15-H WW
+
+            // Draw the WW wall object for frame #2
+            DrawingHelpers.DrawLine(canvas, pt4_x, pt4_y, pt5_x, pt5_y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID);   // 0-15 WW
+            DrawingHelpers.DrawLine(canvas, pt5_x, pt5_y, pt6_x, pt6_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); // 15-H WW
+
+            //Draw the LW object line for frame #1
+            DrawingHelpers.DrawLine(canvas, pt7_x, pt7_y, pt8_x, pt8_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); ;
+            DrawingHelpers.DrawLine(canvas, pt8_x, pt8_y, pt9_x, pt9_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); ;
+
+            // Draw the LW wall object for frame #2
+            DrawingHelpers.DrawLine(canvas, pt10_x, pt10_y, pt11_x, pt11_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
+            DrawingHelpers.DrawLine(canvas, pt11_x, pt11_y, pt12_x, pt12_y, Brushes.Green, 3, Linetypes.LINETYPE_SOLID);
 
             // Draw the Roof object line for frame #1
             for (int i = 0; i < RoofProfile_1_SC.Length - 1; i++)
             {
-                Vector4 pt1 = RoofProfile_1_SC[i];
-                Vector4 pt2 = RoofProfile_1_SC[i + 1];
+                Vector4 r_pt1 = RoofProfile_1_SC[i];
+                Vector4 r_pt2 = RoofProfile_1_SC[i + 1];
 
-                DrawingHelpers.DrawLine(canvas, pt1.X, pt1.Y, pt2.X, pt2.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
+                DrawingHelpers.DrawLine(canvas, r_pt1.X, r_pt1.Y, r_pt2.X, r_pt2.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
             }
-
-            // Draw the LW object line for frame #1
-            DrawingHelpers.DrawLine(canvas, LW_GRD_1_SC.X, LW_GRD_1_SC.Y, LW_15_1_SC.X, LW_15_1_SC.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); ;
-            DrawingHelpers.DrawLine(canvas, LW_15_1_SC.X, LW_15_1_SC.Y, LW_H_1_SC.X, LW_H_1_SC.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); ;
-
-
-
-            // Draw the WW wall object for frame #2
-            DrawingHelpers.DrawLine(canvas, WW_GRD_2_SC.X, WW_GRD_2_SC.Y, LW_GRD_2_SC.X, LW_GRD_2_SC.Y, Brushes.Black, 3, Linetypes.LINETYPE_DASHED); ;
-
-            DrawingHelpers.DrawLine(canvas, WW_GRD_2_SC.X, WW_GRD_2_SC.Y, WW_15_2_SC.X, WW_15_2_SC.Y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID); ;
-            DrawingHelpers.DrawLine(canvas, WW_15_2_SC.X, WW_15_2_SC.Y, WW_H_2_SC.X, WW_H_2_SC.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); ;
 
             // Draw the Roof object line for frame #2
             for (int i = 0; i < RoofProfile_2_SC.Length - 1; i++)
             {
-                Vector4 pt1 = RoofProfile_2_SC[i];
-                Vector4 pt2 = RoofProfile_2_SC[i + 1];
+                Vector4 r_pt1 = RoofProfile_2_SC[i];
+                Vector4 r_pt2 = RoofProfile_2_SC[i + 1];
 
-                DrawingHelpers.DrawLine(canvas, pt1.X, pt1.Y, pt2.X, pt2.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
+                DrawingHelpers.DrawLine(canvas, r_pt1.X, r_pt1.Y, r_pt2.X, r_pt2.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
             }
 
-            // Draw the LW object line for frame #2
-            DrawingHelpers.DrawLine(canvas, LW_GRD_2_SC.X, LW_GRD_2_SC.Y, LW_15_2_SC.X, LW_15_2_SC.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); ;
-            DrawingHelpers.DrawLine(canvas, LW_15_2_SC.X, LW_15_2_SC.Y, LW_H_2_SC.X, LW_H_2_SC.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); ;
+            if (WindOrient == WindOrientations.WIND_ORIENTATION_NORMALTORIDGE)
+            {
 
-            // Draw building dimensions
+            } else
+            {
+
+            }
+
+
+
+
+
+
             string dim_str;
-            // Horizontal Building Dimension
-            // TODO:: Plot this dimension below the grade line
-            dim_str = (Math.Round(Model.L * 100.0) / 100.0).ToString() + "'";
-            DrawingHelpers.DrawDimensionAligned(canvas, WW_GRD_1_SC.X, WW_GRD_1_SC.Y, LW_GRD_1_SC.X, LW_GRD_1_SC.Y, dim_str, dim_text_ht);
 
-            // LW wall
-            dim_str = (Math.Abs(Math.Round(((Model.LW_GRD_1.Y - Model.LW_H_1.Y)) * 100.0) / 100.0)).ToString() + "'";
-            DrawingHelpers.DrawDimensionAligned(canvas, LW_H_1_SC.X, LW_H_1_SC.Y, LW_GRD_1_SC.X, LW_GRD_1_SC.Y, dim_str, dim_text_ht);
+            //// Draw building dimensions
+            //// Horizontal Building Dimension
+            //// TODO:: Plot this dimension below the grade line
+            //dim_str = (Math.Round(Model.L * 100.0) / 100.0).ToString() + "'";
+            //DrawingHelpers.DrawDimensionAligned(canvas, WW_GRD_1_SC.X, WW_GRD_1_SC.Y, LW_GRD_1_SC.X, LW_GRD_1_SC.Y, dim_str, dim_text_ht);
 
-            // WW wall
-            dim_str = (Math.Abs(Math.Round(((Model.WW_GRD_1.Y - Model.WW_H_1.Y)) * 100.0) / 100.0)).ToString() + "'";
-            DrawingHelpers.DrawDimensionAligned(canvas, WW_GRD_1_SC.X, WW_GRD_1_SC.Y, WW_H_1_SC.X, WW_H_1_SC.Y, dim_str, dim_text_ht);
+            //// LW wall
+            //dim_str = (Math.Abs(Math.Round(((Model.LW_GRD_1.Y - Model.LW_H_1.Y)) * 100.0) / 100.0)).ToString() + "'";
+            //DrawingHelpers.DrawDimensionAligned(canvas, LW_H_1_SC.X, LW_H_1_SC.Y, LW_GRD_1_SC.X, LW_GRD_1_SC.Y, dim_str, dim_text_ht);
+
+            //// WW wall
+            //dim_str = (Math.Abs(Math.Round(((Model.WW_GRD_1.Y - Model.WW_H_1.Y)) * 100.0) / 100.0)).ToString() + "'";
+            //DrawingHelpers.DrawDimensionAligned(canvas, WW_GRD_1_SC.X, WW_GRD_1_SC.Y, WW_H_1_SC.X, WW_H_1_SC.Y, dim_str, dim_text_ht);
 
             // TODO::  Draw connector lines between Frame 1 and Frame 2
 
 
+            // Dimension the Ridge Point if it isn't a flat roof or parallel to ridge
+            //if (Model.RoofSlopeType != RoofSlopeTypes.ROOF_SLOPE_FLAT && WindOrient == WindOrientations.WIND_ORIENTATION_NORMALTORIDGE)
+            //{
+            //    // Vertical to Ridge
+            //    dim_str = (Math.Abs(Math.Round(((Model.ORIGIN_1.Y - Model.RIDGE_1.Y)) * 100.0) / 100.0)).ToString() + "'";
+            //    DrawingHelpers.DrawDimensionAligned(canvas, RIDGE_1_SC.X, ORIGIN_1_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht);
+            //    // Horizontal to Ridge from WW
+            //    dim_str = (Math.Abs(Math.Round((Model.RIDGE_1.X - Model.WW_H_1.X) * 100.0) / 100.0)).ToString() + "'";
+            //    DrawingHelpers.DrawDimensionAligned(canvas, WW_H_1_SC.X, RIDGE_1_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht);
 
-            // Dimension the Ridge Point if it isn't a flat roof
-            if (Model.RoofSlopeType != RoofSlopeTypes.ROOF_SLOPE_FLAT)
-            {
-                // Vertical to Ridge
-                dim_str = (Math.Abs(Math.Round(((Model.ORIGIN_1.Y - Model.RIDGE_1.Y)) * 100.0) / 100.0)).ToString() + "'";
-                DrawingHelpers.DrawDimensionAligned(canvas, RIDGE_1_SC.X, ORIGIN_1_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht);
-                // Horizontal to Ridge from WW
-                dim_str = (Math.Abs(Math.Round((Model.RIDGE_1.X - Model.WW_H_1.X) * 100.0) / 100.0)).ToString() + "'";
-                DrawingHelpers.DrawDimensionAligned(canvas, WW_H_1_SC.X, RIDGE_1_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht);
+            //    // Horizontal to Ridge from LW
+            //    dim_str = (Math.Abs(Math.Round((Model.LW_H_1.X - Model.RIDGE_1.X) * 100.0) / 100.0)).ToString() + "'";
+            //    DrawingHelpers.DrawDimensionAligned(canvas, LW_H_1_SC.X, RIDGE_1_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht); ;
+            //}
 
-                // Horizontal to Ridge from LW
-                dim_str = (Math.Abs(Math.Round((Model.LW_H_1.X - Model.RIDGE_1.X) * 100.0) / 100.0)).ToString() + "'";
-                DrawingHelpers.DrawDimensionAligned(canvas, LW_H_1_SC.X, RIDGE_1_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht); ;
-            }
-        }
-
-        public static float ConvertDegToRad(float degrees)
-        {
-            return ((float)Math.PI / (float)180) * degrees;
-        }
-
-        public static Matrix4x4 GetTranslationMatrix(Vector3 position)
-        {
-            return new Matrix4x4(1, 0, 0, 0,
-                                0, 1, 0, 0,
-                                0, 0, 1, 0,
-                                position.X, position.Y, position.Z, 1);
-        }
-
-        public static Matrix4x4 GetRotationMatrix(Vector3 anglesDeg)
-        {
-            anglesDeg = new Vector3(ConvertDegToRad(anglesDeg.X), ConvertDegToRad(anglesDeg.Y), ConvertDegToRad(anglesDeg.Z));
-
-            Matrix4x4 rotationX = new Matrix4x4(1, 0, 0, 0,
-                                                0, (float)Math.Cos(anglesDeg.X), (float)Math.Sin(anglesDeg.X), 0,
-                                                0, (float)-Math.Sin(anglesDeg.X), (float)Math.Cos(anglesDeg.X), 0,
-                                                0, 0, 0, 1);
-
-            Matrix4x4 rotationY = new Matrix4x4((float)Math.Cos(anglesDeg.Y), 0, (float)-Math.Sin(anglesDeg.Y), 0,
-                                                0, 1, 0, 0,
-                                                (float)Math.Sin(anglesDeg.Y), 0, (float)Math.Cos(anglesDeg.Y), 0,
-                                                0, 0, 0, 1);
-
-            Matrix4x4 rotationZ = new Matrix4x4((float)Math.Cos(anglesDeg.Z), (float)Math.Sin(anglesDeg.Z), 0, 0,
-                                                (float)-Math.Sin(anglesDeg.Z), (float)Math.Cos(anglesDeg.Z), 0, 0,
-                                                0, 0, 1, 0,
-                                                0, 0, 0, 1);
-
-            return rotationX * rotationY * rotationZ;
-        }
-
-        public static Matrix4x4 GetScaleMatrix(Vector3 scale)
-        {
-            return new Matrix4x4(scale.X, 0, 0, 0,
-                                 0, scale.Y, 0, 0,
-                                 0, 0, scale.Z, 0,
-                                 0, 0, 0, 1);
-        }
-
-        public static Matrix4x4 Get_TRS_Matrix(Vector3 position, Vector3 rotationAngles, Vector3 scale)
-        {
-            return GetTranslationMatrix(position) * GetRotationMatrix(rotationAngles) * GetScaleMatrix(scale);
         }
     }
 
