@@ -142,9 +142,9 @@ namespace WindCalculator
 
             // Draw the drawing objects
             WindVM_East_A.Draw();
-            WindVM_East_B.Draw();
-            WindVM_North_A.Draw();
-            WindVM_North_B.Draw();
+            //WindVM_East_B.Draw();
+            //WindVM_North_A.Draw();
+            //WindVM_North_B.Draw();
         }
     }
 }

@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASCE7_10Library", "..\ASCE7
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrawingHelpersLibrary", "..\DrawingHelpersLibrary\DrawingHelpersLibrary.csproj", "{8B758AE0-4A37-4642-A50F-23F18CB55BA2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GlmSharp", "..\GlmSharp\GlmSharp\GlmSharp\GlmSharp.csproj", "{A5F19443-DD85-4398-AD24-A2B00C816771}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindCalcUnitTest", "..\WintCalcUnitTest\WindCalcUnitTest.csproj", "{6A853AAC-1E09-446E-B7EC-D0F7ECED7FAE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{8B758AE0-4A37-4642-A50F-23F18CB55BA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8B758AE0-4A37-4642-A50F-23F18CB55BA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8B758AE0-4A37-4642-A50F-23F18CB55BA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5F19443-DD85-4398-AD24-A2B00C816771}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5F19443-DD85-4398-AD24-A2B00C816771}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5F19443-DD85-4398-AD24-A2B00C816771}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5F19443-DD85-4398-AD24-A2B00C816771}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A853AAC-1E09-446E-B7EC-D0F7ECED7FAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A853AAC-1E09-446E-B7EC-D0F7ECED7FAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A853AAC-1E09-446E-B7EC-D0F7ECED7FAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A853AAC-1E09-446E-B7EC-D0F7ECED7FAE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
