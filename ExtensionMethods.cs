@@ -11,10 +11,27 @@ namespace WindCalculator
             return new Vector3((float)(vec.X / mag), (float)(vec.Y / mag), (float)(vec.Z / mag));
         }
 
+        public static Vector4 Normalize(this Vector4 vec)
+        {
+            double mag = Math.Sqrt((vec.X * vec.X) + (vec.Y * vec.Y) + (vec.Z * vec.Z));
+            return new Vector4((float)(vec.X / mag), (float)(vec.Y / mag), (float)(vec.Z / mag), 0.0f);
+        }
+
         public static Vector3 Cross(this Vector3 l, Vector3 r)
         {
             return new Vector3(l.Y * r.Z - l.Z * r.Y, l.Z * r.X - l.X * r.Z, l.X * r.Y - l.Y * r.X);
         }
+
+        public static Vector4 Cross(this Vector4 l, Vector4 r)
+        {
+            return new Vector4(l.Y * r.Z - l.Z * r.Y, l.Z * r.X - l.X * r.Z, l.X * r.Y - l.Y * r.X, 0.0f);
+        }
+
+        public static float Dot(this Vector4 l, Vector4 r)
+        {
+            return (l.X * r.X + l.Y * r.Y + l.Z * r.Z + l.W * r.W);
+        }
+
         public static float Dot(this Vector3 l, Vector3 r)
         {
             return ((l.X * r.X + l.Y * r.Y) + l.Z * r.Z);
@@ -35,7 +52,7 @@ namespace WindCalculator
         /// <returns></returns>
         public static Matrix4x4 Translate(this Matrix4x4 mat, float x, float y, float z)
         {
-            Matrix4x4 m  = Matrix4x4.Identity;
+            Matrix4x4 m  = mat;
             m.M14 = x;
             m.M24 = y;
             m.M34 = z;

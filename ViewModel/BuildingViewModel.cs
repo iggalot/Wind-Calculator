@@ -11,9 +11,9 @@ namespace WindCalculator.ViewModel
     public class BuildingViewModel
     {
         // Our camera object for this view model
-        public Camera CameraObj { get; set; } = new Camera(new Vector3(0.0f, 0.25f, 3.0f), new Vector3(0.0f, 1.0f, 0.0f));
+        public Camera CameraObj { get; set; }
         public BuildingInfo Model { get; set; }
-
+        public Canvas DrawingCanvas { get; set; }
 
         public Vector4 WW_GRD_1_SC { get; set; }
         public Vector4 WW_15_1_SC { get; set; }
@@ -59,155 +59,110 @@ namespace WindCalculator.ViewModel
         /// </summary>
         Matrix4x4 TRS_Matrix { get; set; }
 
-        public BuildingViewModel(Canvas canvas, BuildingInfo bldg, double drawing_scale_factor, WindOrientations orient)
+        public BuildingViewModel(Canvas canvas, Camera camera, BuildingInfo bldg, double drawing_scale_factor, WindOrientations orient)
         {
             Model = bldg;
             SCALE_FACTOR = drawing_scale_factor;
             WindOrient = orient;
+            CameraObj = camera;
+            DrawingCanvas = canvas;
 
-            float[] vertices = {
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-    };
-            // world space positions of our cubes
-            Vector3[] cubePositions = {
-        new Vector3( 0.0f,  0.0f,  0.0f),
-        new Vector3( 2.0f,  5.0f, -15.0f),
-        new Vector3(-1.5f, -2.2f, -2.5f),
-        new Vector3(-3.8f, -2.0f, -12.3f),
-        new Vector3( 2.4f, -0.4f, -3.5f),
-        new Vector3(-1.7f,  3.0f, -7.5f),
-        new Vector3( 1.3f, -2.0f, -2.5f),
-        new Vector3( 1.5f,  2.0f, -2.5f),
-        new Vector3( 1.5f,  0.2f, -1.5f),
-        new Vector3(-1.3f,  1.0f, -1.5f)
-    };
-
-            CameraObj = new Camera(0,0,-3.0f,0,1,0,90,0);
+            //CameraObj = new Camera(0, 0, 150.0f, 0, 1, 0, 90, 0);
             // Update our camera stuff
-            CameraObj.ModelMatrix = Matrix4x4.Identity;
-            CameraObj.ModelMatrix = CameraObj.ModelMatrix.Translate(new Vector3(0,0,0));
-            CameraObj.ModelMatrix = CameraObj.ModelMatrix.ScaleBy(1.0f);
-            // TODO:  A hack but just to make sure we have considered the view matrix
-            CameraObj.ViewMatrix = Matrix4x4.Identity;
-            CameraObj.ViewMatrix = Camera.LookAt(CameraObj.Position, CameraObj.Target, CameraObj.WorldUp);
-           // CameraObj.ViewMatrix = CameraObj.ViewMatrix.Translate(0.0f, 0.0f, -1000.0f);
-                //Camera.LookAt(CameraObj.Position, CameraObj.Target, CameraObj.CameraUp);
-            CameraObj.ProjectionMatrix = Camera.Perspective(CameraObj.FOV, (float)(canvas.Width / canvas.Height), 0.1f, 100.0f);
+            //            CameraObj.ModelMatrix = Matrix4x4.Identity;
+            ////CameraObj.ModelMatrix = CameraObj.ModelMatrix.Translate(new Vector3((float)(-canvas.Width / 2.0), (float)(-canvas.Height / 2.0f), 0));
+            //CameraObj.ModelMatrix = CameraObj.ModelMatrix.ScaleBy(CameraObj.Zoom);
 
-            Vector4 world = new Vector4(10, 10, 0, 1.0f);
-            Vector4 screen = Camera.WorldToScreen(world, CameraObj.ViewMatrix, CameraObj.ProjectionMatrix, canvas.Width, canvas.Height);
-            Vector4 world_retrieve = Camera.ScreenToWorld(screen, CameraObj.ViewMatrix, CameraObj.ProjectionMatrix, canvas.Width, canvas.Height);
-            //TRS_Matrix = CameraObj.ViewMatrix;
+            // Set a basic view matrix
+            //            CameraObj.ViewMatrix = Matrix4x4.Identity;
 
-            // Create our TRS transform for the window
-            //TRS_Matrix_Transform new_transform = new TRS_Matrix_Transform(bldg, 0.5 * canvas.Width, 0.5 * canvas.Height, bldg.ORIGIN_1.Z, 0.0, 0.0, 0.0, SCALE_FACTOR, orient);
-            //TRS_Matrix = new_transform.GetTRSMatrix;
+            // Translate the scene in the reverse direction of where we want to move.
+            //            CameraObj.ViewMatrix = CameraObj.ViewMatrix.Translate(0.0f, 0.0f, -3.0f);
 
-            // Apply the transforms to get screen coords
-            //ORIGIN_1_SC = Vector4.Transform(bldg.ORIGIN_1, TRS_Matrix);
-            //WW_GRD_1_SC = Vector4.Transform(bldg.WW_GRD_1, TRS_Matrix);
-            //WW_15_1_SC = Vector4.Transform(bldg.WW_15_1, TRS_Matrix);
-            //WW_H_1_SC = Vector4.Transform(bldg.WW_H_1, TRS_Matrix);
-            //LW_GRD_1_SC = Vector4.Transform(bldg.LW_GRD_1, TRS_Matrix);
-            //LW_15_1_SC = Vector4.Transform(bldg.LW_15_1, TRS_Matrix);
-            //LW_H_1_SC = Vector4.Transform(bldg.LW_H_1, TRS_Matrix);
-            //RIDGE_1_SC = Vector4.Transform(bldg.RIDGE_1, TRS_Matrix);
-
-            ORIGIN_1_SC = Camera.Project(new Vector3(bldg.ORIGIN_1.X, bldg.ORIGIN_1.Y, bldg.ORIGIN_1.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-            WW_GRD_1_SC = Camera.Project(new Vector3(bldg.WW_GRD_1.X, bldg.WW_GRD_1.Y, bldg.WW_GRD_1.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-            WW_15_1_SC = Camera.Project(new Vector3(bldg.WW_15_1.X, bldg.WW_15_1.Y, bldg.WW_15_1.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-            WW_H_1_SC = Camera.Project(new Vector3(bldg.WW_H_1.X, bldg.WW_H_1.Y, bldg.WW_H_1.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-            LW_GRD_1_SC = Camera.Project(new Vector3(bldg.LW_GRD_1.X, bldg.LW_GRD_1.Y, bldg.LW_GRD_1.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-            LW_15_1_SC = Camera.Project(new Vector3(bldg.LW_15_1.X, bldg.LW_15_1.Y, bldg.LW_15_1.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-            LW_H_1_SC = Camera.Project(new Vector3(bldg.LW_H_1.X, bldg.LW_H_1.Y, bldg.LW_H_1.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-            RIDGE_1_SC = Camera.Project(new Vector3(bldg.RIDGE_1.X, bldg.RIDGE_1.Y, bldg.RIDGE_1.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-
-            ORIGIN_2_SC = Camera.Project(new Vector3(bldg.ORIGIN_2.X, bldg.ORIGIN_2.Y, bldg.ORIGIN_2.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-            WW_GRD_2_SC = Camera.Project(new Vector3(bldg.WW_GRD_2.X, bldg.WW_GRD_2.Y, bldg.WW_GRD_2.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-            WW_15_2_SC = Camera.Project(new Vector3(bldg.WW_15_2.X, bldg.WW_15_2.Y, bldg.WW_15_2.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-            WW_H_2_SC = Camera.Project(new Vector3(bldg.WW_H_2.X, bldg.WW_H_2.Y, bldg.WW_H_2.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-            LW_GRD_2_SC = Camera.Project(new Vector3(bldg.LW_GRD_2.X, bldg.LW_GRD_2.Y, bldg.LW_GRD_2.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-            LW_15_2_SC = Camera.Project(new Vector3(bldg.LW_15_2.X, bldg.LW_15_2.Y, bldg.LW_15_2.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-            LW_H_2_SC = Camera.Project(new Vector3(bldg.LW_H_2.X, bldg.LW_H_2.Y, bldg.LW_H_2.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-            RIDGE_2_SC = Camera.Project(new Vector3(bldg.RIDGE_2.X, bldg.RIDGE_2.Y, bldg.RIDGE_2.Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
+            //           Matrix4x4 res = new Matrix4x4();
 
 
-            //ORIGIN_2_SC = Vector4.Transform(bldg.ORIGIN_2, TRS_Matrix);
-            //WW_GRD_2_SC = Vector4.Transform(bldg.WW_GRD_2, TRS_Matrix);
-            //WW_15_2_SC = Vector4.Transform(bldg.WW_15_2, TRS_Matrix);
-            //WW_H_2_SC = Vector4.Transform(bldg.WW_H_2, TRS_Matrix);
-            //LW_GRD_2_SC = Vector4.Transform(bldg.LW_GRD_2, TRS_Matrix);
-            //LW_15_2_SC = Vector4.Transform(bldg.LW_15_2, TRS_Matrix);
-            //LW_H_2_SC = Vector4.Transform(bldg.LW_H_2, TRS_Matrix);
-            //RIDGE_2_SC = Vector4.Transform(bldg.RIDGE_2, TRS_Matrix);
-            
+            //// TODO::  Figure out how to remove 0,0 on the M11 element of this matrix.
+            //if(!Matrix4x4.Invert(Camera.LookAt(CameraObj.Position, CameraObj.Target, CameraObj.WorldUp), out res))
+            //{
+            //    throw new InvalidOperationException("Unable to invert the LookAt matrix in view construction");
+            //}
+            //CameraObj.ViewMatrix = res;
+
+            // Set the projection mode...
+            //CameraObj.ProjectionMatrix = Camera.Perspective(CameraObj.FOV, (float)(canvas.Width / canvas.Height), 0.1f, 100.0f);
+
+            // Vector4 world = new Vector4(10, 10, 0, 1.0f);
+            // Vector4 screen = Camera.WorldToScreen(world, CameraObj.ModelMatrix, CameraObj.ViewMatrix, CameraObj.ProjectionMatrix, canvas.Width, canvas.Height);
+            // Vector4 world_retrieve = Camera.ScreenToWorld(screen, CameraObj.ViewMatrix, CameraObj.ProjectionMatrix, canvas.Width, canvas.Height);
+
+            UpdateScreenCoords();
+
+        }
+
+        public void UpdateScreenCoords()
+        {
+            BuildingInfo bldg = Model;
+            Canvas canvas = DrawingCanvas;
+
+            ORIGIN_1_SC = Camera.WorldToScreen(bldg.ORIGIN_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            WW_GRD_1_SC = Camera.WorldToScreen(bldg.WW_GRD_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            WW_15_1_SC = Camera.WorldToScreen(bldg.WW_15_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            WW_H_1_SC = Camera.WorldToScreen(bldg.WW_H_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            LW_GRD_1_SC = Camera.WorldToScreen(bldg.LW_GRD_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            LW_15_1_SC = Camera.WorldToScreen(bldg.LW_15_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            LW_H_1_SC = Camera.WorldToScreen(bldg.LW_H_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            RIDGE_1_SC = Camera.WorldToScreen(bldg.RIDGE_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+
+            //CameraObj.ModelMatrix = CameraObj.ModelMatrix.Translate(new Vector3(30, 30, 0));
+
+            ORIGIN_2_SC = Camera.WorldToScreen(bldg.ORIGIN_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            WW_GRD_2_SC = Camera.WorldToScreen(bldg.WW_GRD_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            WW_15_2_SC = Camera.WorldToScreen(bldg.WW_15_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            WW_H_2_SC = Camera.WorldToScreen(bldg.WW_H_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            LW_GRD_2_SC = Camera.WorldToScreen(bldg.LW_GRD_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            LW_15_2_SC = Camera.WorldToScreen(bldg.LW_15_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            LW_H_2_SC = Camera.WorldToScreen(bldg.LW_H_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            RIDGE_2_SC = Camera.WorldToScreen(bldg.RIDGE_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+
             RoofProfile_1_SC = new Vector4[bldg.RoofProfile_1.Length];
             RoofProfile_2_SC = new Vector4[bldg.RoofProfile_2.Length];
 
             // Get the roof profile screen coordsDraw the Roof object line
             for (int i = 0; i < bldg.RoofProfile_1.Length; i++)
             {
-
-                RoofProfile_1_SC[i] = Camera.Project(new Vector3(bldg.RoofProfile_1[i].X, bldg.RoofProfile_1[i].Y, bldg.RoofProfile_1[i].Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-                RoofProfile_2_SC[i] = Camera.Project(new Vector3(bldg.RoofProfile_2[i].X, bldg.RoofProfile_2[i].Y, bldg.RoofProfile_2[i].Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-                //RoofProfile_1_SC[i] = Vector4.Transform(new Vector4(bldg.RoofProfile_1[i].X, bldg.RoofProfile_1[i].Y, bldg.RoofProfile_1[i].Z, 1.0f), TRS_Matrix);
-                //RoofProfile_2_SC[i] = Vector4.Transform(new Vector4(bldg.RoofProfile_2[i].X, bldg.RoofProfile_2[i].Y, bldg.RoofProfile_2[i].Z, 1.0f), TRS_Matrix);
+                RoofProfile_1_SC[i] = Camera.WorldToScreen(bldg.RoofProfile_1[i], CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+                RoofProfile_2_SC[i] = Camera.WorldToScreen(bldg.RoofProfile_2[i], CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
             }
 
-            // Create the screen coordinates for the pressure zone points
-            int count = 0;
-            RoofZonePoints_1_SC = new Vector4[bldg.RoofZonePts_1.Length];
-            RoofZonePoints_2_SC = new Vector4[bldg.RoofZonePts_2.Length];
+            //// Create the screen coordinates for the pressure zone points
+            //int count = 0;
+            //RoofZonePoints_1_SC = new Vector4[bldg.RoofZonePts_1.Length];
+            //RoofZonePoints_2_SC = new Vector4[bldg.RoofZonePts_2.Length];
 
-            for (int i = 0; i < bldg.RoofZonePts_1.Length; i++)
-            {
-                RoofZonePoints_1_SC[count] = Camera.Project(new Vector3(bldg.RoofZonePts_1[i].X, bldg.RoofZonePts_1[i].Y, bldg.RoofZonePts_1[i].Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-                RoofZonePoints_2_SC[count] = Camera.Project(new Vector3(bldg.RoofZonePts_2[i].X, bldg.RoofZonePts_2[i].Y, bldg.RoofZonePts_2[i].Z), CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix);
-            }
+            //for (int i = 0; i < bldg.RoofZonePts_1.Length; i++)
+            //{
+            //    RoofZonePoints_1_SC[i] = Camera.WorldToScreen(bldg.RoofZonePts_1[i], CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //    RoofZonePoints_2_SC[i] = Camera.WorldToScreen(bldg.RoofZonePts_2[i], CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //}
+        }
+
+        public void Update()
+        {
+            CameraObj.Update();
+            UpdateScreenCoords();
+            
         }
 
         public void Draw(Canvas canvas, double dim_text_ht)
         {
+            // Draw coord info
+            double text_ht = 12;
+            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 0, 0, 0, "SCREEN COORDS: " + SCALE_FACTOR.ToString(), Brushes.Black, text_ht);
+            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 1.0f, 0, "WW_GRD_1_SC <X,Y,Z>: " + WW_GRD_1_SC.X.ToString() + ", " + WW_GRD_1_SC.Y.ToString() + ", " + WW_GRD_1_SC.Z.ToString(), Brushes.Black, text_ht);
+            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 2.0f, 0, "WW_H_1_SC <X,Y,Z>: " + WW_H_1_SC.X.ToString() + ", " + WW_H_1_SC.Y.ToString() + ", " + WW_H_1_SC.Z.ToString(), Brushes.Black, text_ht);
+            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 3.0f, 0, "LW_GRD_1_SC <X,Y,Z>: " + LW_GRD_1_SC.X.ToString() + ", " + LW_GRD_1_SC.Y.ToString() + ", " + LW_GRD_1_SC.Z.ToString(), Brushes.Black, text_ht);
+            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 4.0f, 0, "LW_H_1_SC <X,Y,Z>: " + LW_H_1_SC.X.ToString() + ", " + LW_H_1_SC.Y.ToString() + ", " + LW_H_1_SC.Z.ToString(), Brushes.Black, text_ht);
 
 
             // WW points frame1
@@ -221,6 +176,9 @@ namespace WindCalculator.ViewModel
 
             // LW points frame 2
             double pt10_x, pt10_y, pt11_x, pt11_y, pt12_x, pt12_y;
+
+            // Ridge points
+            double pt13_x, pt13_y, pt14_x, pt14_y;
 
             pt1_x = WW_GRD_1_SC.X;
             pt1_y = WW_GRD_1_SC.Y;
@@ -250,26 +208,42 @@ namespace WindCalculator.ViewModel
             pt12_x = LW_H_2_SC.X;
             pt12_y = LW_H_2_SC.Y;
 
+            pt13_x = RIDGE_1_SC.X;
+            pt13_y = RIDGE_1_SC.Y;
+            pt14_x = RIDGE_2_SC.X;
+            pt14_y = RIDGE_2_SC.Y;
+
             // Draw the ground
             //DrawingHelpers.DrawLine(canvas, WW_GRD_1_SC.X, WW_GRD_1_SC.Y, LW_GRD_1_SC.X, LW_GRD_1_SC.Y, Brushes.Black, 3, Linetypes.LINETYPE_DASHED); ;
-            DrawingHelpers.DrawLine(canvas, pt1_x, pt1_y, pt7_x, pt7_y, Brushes.Black, 3, Linetypes.LINETYPE_DASHED); ;
-            DrawingHelpers.DrawLine(canvas, pt4_x, pt4_y, pt10_x, pt10_y, Brushes.Red, 3, Linetypes.LINETYPE_DASHED); ;
+            DrawingHelpers.DrawLine(canvas, pt1_x, pt1_y, pt7_x, pt7_y, Brushes.Black, 3, Linetypes.LINETYPE_DASHED);
+            DrawingHelpers.DrawLine(canvas, pt4_x, pt4_y, pt10_x, pt10_y, Brushes.Red, 3, Linetypes.LINETYPE_DASHED);
 
-            // Draw the WW wall object for frame #1
+            //// Draw the WW wall object for frame #1
             DrawingHelpers.DrawLine(canvas, pt1_x, pt1_y, pt2_x, pt2_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);   // 0-15 WW
             DrawingHelpers.DrawLine(canvas, pt2_x, pt2_y, pt3_x, pt3_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); // 15-H WW
 
-            // Draw the WW wall object for frame #2
+            //// Draw the WW wall object for frame #2
             DrawingHelpers.DrawLine(canvas, pt4_x, pt4_y, pt5_x, pt5_y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID);   // 0-15 WW
             DrawingHelpers.DrawLine(canvas, pt5_x, pt5_y, pt6_x, pt6_y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID); // 15-H WW
 
-            //Draw the LW object line for frame #1
-            DrawingHelpers.DrawLine(canvas, pt7_x, pt7_y, pt8_x, pt8_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); ;
-            DrawingHelpers.DrawLine(canvas, pt8_x, pt8_y, pt9_x, pt9_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); ;
+            //////Draw the LW object line for frame #1
+            DrawingHelpers.DrawLine(canvas, pt7_x, pt7_y, pt8_x, pt8_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
+            DrawingHelpers.DrawLine(canvas, pt8_x, pt8_y, pt9_x, pt9_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
 
             // Draw the LW wall object for frame #2
             DrawingHelpers.DrawLine(canvas, pt10_x, pt10_y, pt11_x, pt11_y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID);
             DrawingHelpers.DrawLine(canvas, pt11_x, pt11_y, pt12_x, pt12_y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID);
+
+            // Draw WW_H_1 to WW_H_2 and LW_H_1 to LW_H_2
+            DrawingHelpers.DrawLine(canvas, pt3_x, pt3_y, pt6_x, pt6_y, Brushes.Purple, 3, Linetypes.LINETYPE_SOLID);
+            DrawingHelpers.DrawLine(canvas, pt9_x, pt9_y, pt12_x, pt12_y, Brushes.Purple, 3, Linetypes.LINETYPE_SOLID);
+
+            // Draw RIDGE_1 to RIDGE_2
+            if((Double.IsNaN(RIDGE_1_SC.X) || Double.IsNaN(RIDGE_1_SC.Y) || Double.IsNaN(RIDGE_1_SC.Z) || Double.IsNaN(RIDGE_2_SC.X) || Double.IsNaN(RIDGE_2_SC.Y) || Double.IsNaN(RIDGE_2_SC.Z)) != true)
+            {
+                DrawingHelpers.DrawLine(canvas, pt13_x, pt13_y, pt14_x, pt14_y, Brushes.Purple, 3, Linetypes.LINETYPE_SOLID);
+            }
+
 
             // Draw the Roof object line for frame #1
             for (int i = 0; i < RoofProfile_1_SC.Length - 1; i++)
@@ -289,13 +263,13 @@ namespace WindCalculator.ViewModel
                 DrawingHelpers.DrawLine(canvas, r_pt1.X, r_pt1.Y, r_pt2.X, r_pt2.Y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID);
             }
 
-            if (WindOrient == WindOrientations.WIND_ORIENTATION_NORMALTORIDGE)
-            {
+            //if (WindOrient == WindOrientations.WIND_ORIENTATION_NORMALTORIDGE)
+            //{
 
-            } else
-            {
+            //} else
+            //{
 
-            }
+            //}
 
 
 

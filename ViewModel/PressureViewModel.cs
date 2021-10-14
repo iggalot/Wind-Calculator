@@ -43,6 +43,18 @@ namespace WindCalculator.ViewModel
         {
             PRESSURE_SCALE_FACTOR = 0.6 * bldg_vm.SCALE_FACTOR;
 
+            WindProv = wind_prov;
+            BuildingVM = bldg_vm;
+            Title = title;
+
+            UpdatePressureScreenCoords();
+        }
+
+        public void UpdatePressureScreenCoords()
+        {
+            BuildingViewModel bldg_vm = BuildingVM;
+            WindProvisions wind_prov = WindProv;
+
             // Dynamic pressure q coordinates for WW
             WW_P0_1_SC = new Vector4(bldg_vm.WW_GRD_1_SC.X - (float)(wind_prov.P_0_WW * PRESSURE_SCALE_FACTOR), bldg_vm.WW_GRD_1_SC.Y, 0.0f, 1.0f);
             WW_P15_1_SC = new Vector4(bldg_vm.WW_15_1_SC.X - (float)(wind_prov.P_15_WW * PRESSURE_SCALE_FACTOR), bldg_vm.WW_15_1_SC.Y, 0.0f, 1.0f);
@@ -52,9 +64,11 @@ namespace WindCalculator.ViewModel
             LW_P15_1_SC = new Vector4(bldg_vm.LW_15_1_SC.X + (float)(wind_prov.P_H_LW * PRESSURE_SCALE_FACTOR), bldg_vm.LW_15_1_SC.Y, 0.0f, 1.0f);
             LW_PH_1_SC = new Vector4(bldg_vm.LW_H_1_SC.X + (float)(wind_prov.P_H_LW * PRESSURE_SCALE_FACTOR), bldg_vm.LW_H_1_SC.Y, 0.0f, 1.0f);
 
-            WindProv = wind_prov;
-            BuildingVM = bldg_vm;
-            Title = title;
+        }
+
+        public void Update()
+        {
+            UpdatePressureScreenCoords();
         }
 
         public void Draw(Canvas canvas, double pressure_text_ht)
