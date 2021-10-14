@@ -4,7 +4,9 @@ using System;
 using System.Numerics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
+using WindCalculator.Model;
 using WindCalculator.ViewModel;
 
 namespace WindCalculator
@@ -31,14 +33,30 @@ namespace WindCalculator
 
             DataContext = this;
 
+            // Add keyevent here
+            this.KeyDown += new KeyEventHandler(MainWindow_KeyDown);
             OnUserCreate();
         }
+
+
 
         /// <summary>
         /// Routine that runs everytime it is called (once per frame?  after user input?)
         /// </summary>
         private void OnUserUpdate()
         {
+            // Update the view models
+            WindVM_East_A.Update();
+            WindVM_East_B.Update();
+            WindVM_North_A.Update();
+            WindVM_North_B.Update();
+
+            // Clear the canvas
+            MainCanvas.Children.Clear();
+            Canvas2.Children.Clear();
+            Canvas3.Children.Clear();
+            Canvas4.Children.Clear();
+
             Draw(MainCanvas);
             Draw(Canvas2);
             Draw(Canvas3);
@@ -110,7 +128,10 @@ namespace WindCalculator
             double SCALE_FACTOR_VERT = 0.6 * canvas.Height / bldg.H;
             double SCALE_FACTOR = Math.Min(SCALE_FACTOR_HORIZ, SCALE_FACTOR_VERT);
 
-            BuildingViewModel bldg_vm = new BuildingViewModel(canvas, bldg, SCALE_FACTOR, orient);
+            // create our camera object
+            Camera camera = new Camera(canvas, 5, 0, 500.0f, 0, 1, 0, 90, 0);
+    
+            BuildingViewModel bldg_vm = new BuildingViewModel(canvas, camera, bldg, SCALE_FACTOR, orient);
             PressureViewModel pressure_vm = new PressureViewModel(canvas, wind_prov, bldg_vm, title, orient, wind_case);
 
             return new WindViewModel(canvas, bldg_vm, pressure_vm, wind_prov, orient, wind_case);
@@ -132,6 +153,9 @@ namespace WindCalculator
         /// <param name="canvas"></param>
         protected void Draw(Canvas canvas)
         {
+
+            canvas.Children.Clear();
+
             // Center point of current canvas
             double x_center = canvas.Width * 0.5;
             double y_center = canvas.Height * 0.5;
@@ -145,6 +169,46 @@ namespace WindCalculator
             //WindVM_East_B.Draw();
             //WindVM_North_A.Draw();
             //WindVM_North_B.Draw();
+        }
+
+        private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.W)
+            {
+                WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(0, 0, -25, 1);
+                WindVM_East_A.BuildingVM.CameraObj.Update();
+            }
+
+            if (e.Key == System.Windows.Input.Key.S)
+            {
+                WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(0, 0, 25, 1);
+                WindVM_East_A.BuildingVM.CameraObj.Update();
+            }
+
+            if (e.Key == System.Windows.Input.Key.A)
+            {
+                WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(-25, 0, 0, 1);
+                WindVM_East_A.BuildingVM.CameraObj.Update();
+            }
+
+            if (e.Key == System.Windows.Input.Key.D)
+            {
+                WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(25, 0, 0, 1);
+                WindVM_East_A.BuildingVM.CameraObj.Update();
+            }
+            if (e.Key == System.Windows.Input.Key.Space)
+            {
+                WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(0, 25, 0, 1);
+                WindVM_East_A.BuildingVM.CameraObj.Update();
+            }
+
+            if (e.Key == System.Windows.Input.Key.R)
+            {
+                WindVM_East_A.BuildingVM.CameraObj.CameraPosition = WindVM_East_A.BuildingVM.CameraObj.OriginalPosition;
+                WindVM_East_A.BuildingVM.CameraObj.Update();
+            }
+
+            OnUserUpdate();
         }
     }
 }
