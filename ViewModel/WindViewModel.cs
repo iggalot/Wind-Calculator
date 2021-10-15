@@ -54,8 +54,8 @@ namespace WindCalculator.ViewModel
 
 
 
-            BuildingVM.Draw(DrawingCanvas, 10);
-            PressureVM.Draw(DrawingCanvas, 10);
+            BuildingVM.Draw(10);
+            PressureVM.Draw(DrawingCanvas,10);
             //PressureVM.Draw(DrawingCanvas);
         }
   

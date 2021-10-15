@@ -73,8 +73,8 @@ namespace WindCalculator
 
             // building dimension constants
             RiskCategories risk_cat = RiskCategories.II;
-            double wall_ht = 35;  // wall height
-            double b = 50; // length perpendicular to wind
+            double wall_ht = 100;  // wall height
+            double b = 100; // length perpendicular to wind
 
             // Frame 1
             Vector4 ww_wall_1 = new Vector4(0.0f, (float)wall_ht, 0, 1.0f);
@@ -129,7 +129,7 @@ namespace WindCalculator
             double SCALE_FACTOR = Math.Min(SCALE_FACTOR_HORIZ, SCALE_FACTOR_VERT);
 
             // create our camera object
-            Camera camera = new Camera(canvas, 5, 0, 500.0f, 0, 1, 0, 90, 0);
+            Camera camera = new Camera(canvas, (float)-50, 50, -50, 0, 1, 0, 90, 0);
     
             BuildingViewModel bldg_vm = new BuildingViewModel(canvas, camera, bldg, SCALE_FACTOR, orient);
             PressureViewModel pressure_vm = new PressureViewModel(canvas, wind_prov, bldg_vm, title, orient, wind_case);

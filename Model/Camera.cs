@@ -83,6 +83,7 @@ namespace WindCalculator.Model
             CameraTarget = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
             CameraFront = Vector4.Subtract(CameraTarget, CameraPosition).Normalize();
             CameraRight = CameraFront.Cross(WorldUp).Normalize();
+            CameraUp = CameraRight.Cross(CameraFront).Normalize();
 
             //UpdateCameraVectors();
             //setCameraState(false);
@@ -90,9 +91,12 @@ namespace WindCalculator.Model
             ModelMatrix = Matrix4x4.Identity;
             ModelMatrix = ModelMatrix.ScaleBy(Zoom);
 
-            ViewMatrix = UpdateViewMatrix();
+            UpdateViewMatrix();
 
+            //ProjectionMatrix = Camera.Ortho((float)-c.Width/2.0f, (float)c.Width/2.0f, (float)-c.Height/2.0f, (float)c.Height/2.0f);
             ProjectionMatrix = Camera.Perspective(FOV, (float)(c.Width / c.Height), 0.1f, 100.0f);
+            //ProjectionMatrix = Matrix4x4.Identity;
+
         }
 
 
@@ -108,27 +112,35 @@ namespace WindCalculator.Model
             CameraTarget = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
             CameraFront = Vector4.Subtract(CameraTarget, CameraPosition).Normalize();
             CameraRight = CameraFront.Cross(WorldUp).Normalize();
+            CameraUp = CameraRight.Cross(CameraFront).Normalize();
+
 
             //            UpdateCameraVectors();
             //            setCameraState(false);
 
-            ModelMatrix = Matrix4x4.Identity;
+            ModelMatrix = Matrix4x4.Identity; 
             ModelMatrix = ModelMatrix.ScaleBy(Zoom);
 
-            ViewMatrix = UpdateViewMatrix();
+            UpdateViewMatrix();
 
+            // Ortho projection does not work
+            //ProjectionMatrix = Camera.Ortho((float)-c.Width/2.0f, (float)c.Width/2.0f, (float)-c.Height/2.0f, (float)c.Height/2.0f);
             ProjectionMatrix = Camera.Perspective(FOV, (float)(c.Width / c.Height), 0.1f, 100.0f);
+            //ProjectionMatrix = Matrix4x4.Identity;
         }
 
         public void Update()
         {
-            ViewMatrix = UpdateViewMatrix();
+            UpdateViewMatrix();
         }
 
-        private Matrix4x4 UpdateViewMatrix()
+        private void UpdateViewMatrix()
         {
-            Matrix4x4 tmp = LookAt(CameraPosition, CameraTarget, WorldUp);
-            return tmp;
+            ViewMatrix = LookAt(CameraPosition, CameraTarget, CameraUp);
+            CameraFront = (new Vector4(ViewMatrix.M31, ViewMatrix.M32, ViewMatrix.M33, 0.0f)).Normalize();
+            CameraRight = (new Vector4(ViewMatrix.M11, ViewMatrix.M12, ViewMatrix.M13, 0.0f)).Normalize();
+            CameraUp = (new Vector4(ViewMatrix.M21, ViewMatrix.M22, ViewMatrix.M23, 0.0f)).Normalize();
+
         }
 
         // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
@@ -203,7 +215,7 @@ namespace WindCalculator.Model
 
         void UpdateCameraVectors()
         {
-            //// Calculate the new Front vector
+            ////// Calculate the new Front vector
             //Vector4 front;
             //front.X = (float)(Math.Cos(Yaw.ToRadians()) * Math.Cos(Pitch.ToRadians()));
             //front.Y = (float)(Math.Sin(Pitch.ToRadians()));
@@ -324,9 +336,9 @@ namespace WindCalculator.Model
             Matrix4x4 m = new Matrix4x4();
             m.M11 = (float)(1 / (aspect * tanHalfFovy));
             m.M22 = (float)(1 / (tanHalfFovy));
-            m.M33 = (float)(-(zFar + zNear) / (zFar - zNear));
-            m.M34 = (float)(-1);
-            m.M43 = (float)(-2 * zFar * zNear) / (zFar - zNear);
+            m.M33 = (float)(-(zNear + zFar) / (zNear - zFar));
+            m.M43 = (float)(1);
+            m.M34 = (float)(2.0 * zFar * zNear) / (zNear - zFar);
             return m;
         }
 
@@ -387,15 +399,15 @@ namespace WindCalculator.Model
             Vector4 view_coord = viewProjectionMatrix.MatrixVectorProduct(new_point);
 
             // Coords of the screen in camera
-            Vector4 screen_coord = new Vector4(view_coord.X / view_coord.Z, view_coord.Y / view_coord.Z, 0.0f, 1.0f);
+            //Vector4 screen_coord = new Vector4(view_coord.X / view_coord.Z, view_coord.Y / view_coord.Z, 0.0f, 1.0f);
 
 
             //// transform world to normalized clipping coords (raster coords)
             //Vector4 clip_coord = new Vector4((float)((screen_coord.X + width / 2.0) / width), (float)((screen_coord.Y + height / 2.0) / height), 0.0f, 1.0f);
-            Vector4 clip_coord = new Vector4((float)((screen_coord.X) * width), (float)((screen_coord.Y) * height), 0.0f, 1.0f);
+            //Vector4 clip_coord = new Vector4((float)((screen_coord.X) * width), (float)((screen_coord.Y) * height), 0.0f, 1.0f);
 
             //// Invert the y coordinate
-            Vector4 canvas_coord = new Vector4((float)(Math.Round(-clip_coord.X)), (float)(Math.Round((1 - clip_coord.Y / height) * height / 2.0f)), 0.0f, 1.0f);
+            Vector4 canvas_coord = new Vector4((float)(Math.Round(view_coord.X)), (float)(Math.Round((1 - view_coord.Y / height) * height / 2.0f)), 0.0f, 1.0f);
             ////float winX = (float)Math.Round(((screen_coord.X + width / 2) * width);
             //// Calcuate the -Y because Y axis is oriented top->down
             ////float winY = (float)Math.Round(((1 - view_coord.Y) / 2.0) * height);
