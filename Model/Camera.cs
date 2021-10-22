@@ -72,6 +72,8 @@ namespace WindCalculator.Model
         private float m_deltaTime = 0.0f;
         private float m_lastFrameTime = 0.0f;
 
+        public bool IsActive = false;
+
         // Constructor with vectors
         public Camera(Canvas c, Vector4 position, Vector4 up, float yaw = DEFAULT_CAMERA_YAW, float pitch = DEFAULT_CAMERA_PITCH)
         {
@@ -85,8 +87,7 @@ namespace WindCalculator.Model
             CameraRight = CameraFront.Cross(WorldUp).Normalize();
             CameraUp = CameraRight.Cross(CameraFront).Normalize();
 
-            //UpdateCameraVectors();
-            //setCameraState(false);
+            UpdateCameraVectors();
 
             ModelMatrix = Matrix4x4.Identity;
             ModelMatrix = ModelMatrix.ScaleBy(Zoom);
@@ -114,9 +115,7 @@ namespace WindCalculator.Model
             CameraRight = CameraFront.Cross(WorldUp).Normalize();
             CameraUp = CameraRight.Cross(CameraFront).Normalize();
 
-
-            //            UpdateCameraVectors();
-            //            setCameraState(false);
+            UpdateCameraVectors();
 
             ModelMatrix = Matrix4x4.Identity; 
             ModelMatrix = ModelMatrix.ScaleBy(Zoom);
@@ -144,8 +143,8 @@ namespace WindCalculator.Model
         }
 
         // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-        void ProcessKeyboard(CameraMovementDirections direction, float deltaTime) {
-            float velocity = MovementSpeed * m_deltaTime;
+        public void ProcessKeyboard(CameraMovementDirections direction, float deltaTime) {
+            float velocity = MovementSpeed * deltaTime;
             if (direction == CameraMovementDirections.FORWARD)
                 CameraPosition += CameraFront * velocity;
             if (direction == CameraMovementDirections.BACKWARD)
@@ -158,11 +157,18 @@ namespace WindCalculator.Model
                 CameraPosition += CameraUp * velocity;
             if (direction == CameraMovementDirections.DOWN)
                 CameraPosition -= CameraUp * velocity;
+
+            UpdateCameraVectors();
+
         }
 
         // Process input received from a mouse input system.  Expects the offset value in both the x and y direction
-        void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true)
+        public void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true)
         {
+            // If the camera is turned off, terminate the update events
+            if (IsActive == false)
+                return;
+
             xoffset *= MouseSensitivity;
             yoffset *= MouseSensitivity;
 
@@ -197,12 +203,6 @@ namespace WindCalculator.Model
             ProjectionMatrix = Matrix4x4.Identity;   //default identity matrix  
         }
 
-        void setCameraState(bool state)
-        {
-            m_bCameraIsActive = state;
-            return;
-        }
-
         bool getCameraState() { return m_bCameraIsActive; }
 
         void setPos(Vector4 pos)
@@ -215,16 +215,16 @@ namespace WindCalculator.Model
 
         void UpdateCameraVectors()
         {
-            ////// Calculate the new Front vector
-            //Vector4 front;
-            //front.X = (float)(Math.Cos(Yaw.ToRadians()) * Math.Cos(Pitch.ToRadians()));
-            //front.Y = (float)(Math.Sin(Pitch.ToRadians()));
-            //front.Z = (float)(Math.Sin(Yaw.ToRadians()) * Math.Cos(Pitch.ToRadians()));
-            //front.W = 0.0f;
-            //CameraFront = front.Normalize();
-            //// Also re-calculate the Right and Up vector
-            //CameraRight = CameraFront.Cross(WorldUp).Normalize(); // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-            //CameraUp = CameraRight.Cross(CameraFront).Normalize();
+            //// Calculate the new Front vector
+            Vector4 front;
+            front.X = (float)(Math.Cos(Yaw.ToRadians()) * Math.Cos(Pitch.ToRadians()));
+            front.Y = (float)(Math.Sin(Pitch.ToRadians()));
+            front.Z = (float)(Math.Sin(Yaw.ToRadians()) * Math.Cos(Pitch.ToRadians()));
+            front.W = 0.0f;
+            CameraFront = front.Normalize();
+            // Also re-calculate the Right and Up vector
+            CameraRight = CameraFront.Cross(WorldUp).Normalize(); // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+            CameraUp = CameraRight.Cross(CameraFront).Normalize();
         }
 
         /// <summary>

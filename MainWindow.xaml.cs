@@ -19,6 +19,9 @@ namespace WindCalculator
         //public const double PRESSURE_TEXT_HT = 10;
         //public const double STRUCTURE_DIM_TEXT_HT = 20;
 
+        // Stores the last mouse point
+        private Vector4 lastMousePoint { get; set; } = new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+
         /// <summary>
         /// The WindProvision view models for this graphic for a wind that is acting on the east face of the building.
         /// </summary>
@@ -164,6 +167,10 @@ namespace WindCalculator
             DrawingHelpers.DrawLine(canvas, x_center, 0, x_center, 2.0 * y_center, Brushes.BlueViolet, 1, Linetypes.LINETYPE_PHANTOM);
             DrawingHelpers.DrawLine(canvas, 0, y_center, 2.0 * x_center, y_center, Brushes.BlueViolet, 1, Linetypes.LINETYPE_PHANTOM);
 
+            // Draw the camera state message
+            string cam_str = (WindVM_East_A.BuildingVM.CameraObj.IsActive ? "ON" : "OFF");
+            DrawingHelpers.DrawText(canvas, canvas.Width - 100, canvas.Height - 12, 0.0, "CAMERA: " + cam_str, Brushes.Black, 12);
+
             // Draw the drawing objects
             WindVM_East_A.Draw();
             //WindVM_East_B.Draw();
@@ -173,38 +180,87 @@ namespace WindCalculator
 
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == System.Windows.Input.Key.W)
+            // toggle the camera state to be active
+            if (e.Key == Key.C)
             {
-                WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(0, 0, -25, 1);
-                WindVM_East_A.BuildingVM.CameraObj.Update();
+                bool state = WindVM_East_A.BuildingVM.CameraObj.IsActive;
+                WindVM_East_A.BuildingVM.CameraObj.IsActive = (state == true) ? false : true;
+                WindVM_East_A.Update();
             }
 
-            if (e.Key == System.Windows.Input.Key.S)
+            // Allow our camera functionality.
+            // TODO:: this should be moved to the camera object.
+            if(WindVM_East_A.BuildingVM.CameraObj.IsActive)
             {
-                WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(0, 0, 25, 1);
-                WindVM_East_A.BuildingVM.CameraObj.Update();
+                if (e.Key == Key.W)
+                {
+                    WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(0, 0, -25, 1);
+                    WindVM_East_A.BuildingVM.CameraObj.Update();
+                }
+
+                if (e.Key == Key.S)
+                {
+                    WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(0, 0, 25, 1);
+                    WindVM_East_A.BuildingVM.CameraObj.Update();
+                }
+
+                if (e.Key == Key.A)
+                {
+                    WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(-25, 0, 0, 1);
+                    WindVM_East_A.BuildingVM.CameraObj.Update();
+                }
+
+                if (e.Key == Key.D)
+                {
+                    WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(25, 0, 0, 1);
+                    WindVM_East_A.BuildingVM.CameraObj.Update();
+                }
+                if (e.Key == Key.Space)
+                {
+                    WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(0, 25, 0, 1);
+                    WindVM_East_A.BuildingVM.CameraObj.Update();
+                }
+
+                if (e.Key == Key.R)
+                {
+                    WindVM_East_A.BuildingVM.CameraObj.CameraPosition = WindVM_East_A.BuildingVM.CameraObj.OriginalPosition;
+                    WindVM_East_A.BuildingVM.CameraObj.Update();
+                }
             }
 
-            if (e.Key == System.Windows.Input.Key.A)
+            OnUserUpdate();
+        }
+
+        private void MainCanvas_MouseMove(object sender, MouseEventArgs e)
+        {
+            // if our  camera state isn't active do nothing
+            if (WindVM_East_A.BuildingVM.CameraObj.IsActive == false)
             {
-                WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(-25, 0, 0, 1);
-                WindVM_East_A.BuildingVM.CameraObj.Update();
+                e.Handled = true;
+                return;
             }
 
-            if (e.Key == System.Windows.Input.Key.D)
-            {
-                WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(25, 0, 0, 1);
-                WindVM_East_A.BuildingVM.CameraObj.Update();
-            }
-            if (e.Key == System.Windows.Input.Key.Space)
-            {
-                WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(0, 25, 0, 1);
-                WindVM_East_A.BuildingVM.CameraObj.Update();
-            }
+            Point pt = Mouse.GetPosition(MainCanvas);
+            Vector4 currentPoint = new Vector4((float)(pt.X), (float)(pt.Y), 0.0f, 0.0f);
 
-            if (e.Key == System.Windows.Input.Key.R)
+            Vector4 distMoved = Vector4.Subtract(currentPoint, lastMousePoint);
+
+            WindVM_East_A.BuildingVM.CameraObj.ProcessMouseMovement(distMoved.X, distMoved.Y, true);
+            e.Handled = true;
+
+            lastMousePoint = currentPoint;
+
+            OnUserUpdate();
+        }
+
+        private void MainCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            CameraMovementDirections dir;
+            float deltaTime = 5.0f;
+            if (WindVM_East_A.BuildingVM.CameraObj.IsActive)
             {
-                WindVM_East_A.BuildingVM.CameraObj.CameraPosition = WindVM_East_A.BuildingVM.CameraObj.OriginalPosition;
+                dir = (e.Delta > 0) ? CameraMovementDirections.FORWARD : CameraMovementDirections.BACKWARD;
+                WindVM_East_A.BuildingVM.CameraObj.ProcessKeyboard(dir, deltaTime);
                 WindVM_East_A.BuildingVM.CameraObj.Update();
             }
 
