@@ -92,6 +92,7 @@ namespace WindCalculator.Model
             ModelMatrix = Matrix4x4.Identity;
             ModelMatrix = ModelMatrix.ScaleBy(Zoom);
 
+            ViewMatrix = PointAt(CameraPosition, CameraTarget, WorldUp);
             UpdateViewMatrix();
 
             //ProjectionMatrix = Camera.Ortho((float)-c.Width/2.0f, (float)c.Width/2.0f, (float)-c.Height/2.0f, (float)c.Height/2.0f);
@@ -115,6 +116,7 @@ namespace WindCalculator.Model
             CameraRight = CameraFront.Cross(WorldUp).Normalize();
             CameraUp = CameraRight.Cross(CameraFront).Normalize();
 
+            ViewMatrix = PointAt(CameraPosition, CameraTarget, WorldUp);
             UpdateCameraVectors();
 
             ModelMatrix = Matrix4x4.Identity; 
@@ -135,7 +137,7 @@ namespace WindCalculator.Model
 
         private void UpdateViewMatrix()
         {
-            ViewMatrix = LookAt(CameraPosition, CameraTarget, CameraUp);
+            ViewMatrix = PointAt(CameraPosition, CameraPosition + CameraFront, CameraUp);
             CameraFront = (new Vector4(ViewMatrix.M31, ViewMatrix.M32, ViewMatrix.M33, 0.0f)).Normalize();
             CameraRight = (new Vector4(ViewMatrix.M11, ViewMatrix.M12, ViewMatrix.M13, 0.0f)).Normalize();
             CameraUp = (new Vector4(ViewMatrix.M21, ViewMatrix.M22, ViewMatrix.M23, 0.0f)).Normalize();
@@ -234,84 +236,45 @@ namespace WindCalculator.Model
         /// <param name="center">the vector to the point being looked at</param>
         /// <param name="world_up">the up vector for the world</param>
         /// <returns></returns>
-        public static Matrix4x4 LookAt(Vector4 camera_pos, Vector4 target, Vector4 world_up)
+        public static Matrix4x4 PointAt(Vector4 camera_pos, Vector4 target, Vector4 world_up)
         {
-            Vector4 front = (camera_pos - target).Normalize();
-            Vector4 right = front.Cross(world_up).Normalize();
-            Vector4 up = right.Cross(front);
+            // calculate the new forward direction
+            Vector4 newForward = (target - camera_pos).Normalize();
 
-            Matrix4x4 m = Matrix4x4.Identity;
-            m.M11 = right.X;
-            m.M12 = right.Y;
-            m.M13 = right.Z;
+            // calculate the new up
+            Vector4 a = Vector4.Multiply(newForward, world_up.Dot(newForward));
+            Vector4 newUp = Vector4.Subtract(world_up, a).Normalize();
 
-            m.M21 = up.X;
-            m.M22 = up.Y;
-            m.M23 = up.Z;
+            // calculate the new right
+            Vector4 newRight = newUp.Cross(newForward).Normalize();
 
-            m.M31 = -front.X;
-            m.M32 = -front.Y;
-            m.M33 = -front.Z;
+            Matrix4x4 m = new Matrix4x4();
+            m.M11 = newRight.X;
+            m.M12 = newRight.Y;
+            m.M13 = newRight.Z;
+            m.M14 = 0.0f;
 
-            Matrix4x4 m2 = Matrix4x4.Identity;
-            m2.M41 = -camera_pos.X;
-            m2.M42 = -camera_pos.Y;
-            //m2.M43 = -front.Dot(camera_pos);
-            m2.M43 = -camera_pos.Z;
-            m2.M44 = 1.0f;
+            m.M21 = newUp.X;
+            m.M22 = newUp.Y;
+            m.M23 = newUp.Z;
+            m.M24 = 0.0f;
 
-            Matrix4x4 tmp = Matrix4x4.Multiply(m, m2);
-            tmp = Matrix4x4.Transpose(tmp);
-            return tmp;
+            m.M31 = newForward.X;
+            m.M32 = newForward.Y;
+            m.M33 = newForward.Z;
+            m.M34 = 0.0f;
+
+            m.M41 = camera_pos.X;
+            m.M42 = camera_pos.Y;
+            m.M43 = camera_pos.Z;
+            m.M44 = 1.0f;
+
+            Matrix4x4 result;
+            if (Matrix4x4.Invert(m, out result))
+                return result;
+            throw new InvalidOperationException("Error inverting matrix in LookAt function");
         }
 
-        /// <summary>
-        /// Creates a matrix for a symmetric perspective-view frustum with far plane at infinite.
-        /// </summary>
-        public static Matrix4x4 InfinitePerspective(float fovy, float aspect, float zNear)
-        {
-            float range = (float)(Math.Tan(fovy / 2.0) * zNear);
-            float l = -range * (float)aspect;
-            float r = range * (float)aspect;
-            float b = -range;
-            float t = range;
-            Matrix4x4 m = Matrix4x4.Identity;
-            m.M11 = (float)(((2.0) * zNear) / (r - l));
-            m.M22 = (float)(((2.0) * zNear) / (t - b));
-            m.M33 = (float)(-(1.0));
-            m.M34 = (float)(-(1.0));
-            m.M43 = (float)(-(2.0) * zNear);
-            return m;
-        }
-
-        public static Matrix4x4 FrustumProjection(float left, float right, float bottom, float top, float nearVal, float farVal)
-        {
-            Matrix4x4 m = Matrix4x4.Identity;
-            m.M11 = (2 * nearVal) / (right - left);
-            m.M22 = (2 * nearVal) / (top - bottom);
-            m.M31 = (right + left) / (right - left);
-            m.M32 = (top + bottom) / (top - bottom);
-            m.M33 = -(farVal + nearVal) / (farVal - nearVal);
-            m.M34 = -1;
-            m.M43 = -(2 * farVal * nearVal) / (farVal - nearVal);
-
-            return m;
-        }
-
-        /// <summary>
-        /// Creates a matrix for an orthographic parallel viewing volume.
-        /// </summary>
-        public static Matrix4x4 OrthoClipped(float left, float right, float bottom, float top, float zNear, float zFar)
-        {
-            Matrix4x4 m = Matrix4x4.Identity;
-            m.M11 = 2 / (right - left);
-            m.M22 = 2 / (top - bottom);
-            m.M33 = -2 / (zFar - zNear);
-            m.M41 = -(right + left) / (right - left);
-            m.M42 = -(top + bottom) / (top - bottom);
-            m.M43 = -(zFar + zNear) / (zFar - zNear);
-            return m;
-        }
 
         /// <summary>
         /// Creates a matrix for projecting two-dimensional coordinates onto the screen.
@@ -330,35 +293,18 @@ namespace WindCalculator.Model
         /// <summary>
         /// Creates a perspective transformation matrix.
         /// </summary>
-        public static Matrix4x4 Perspective(float fovy, float aspect, float zNear, float zFar)
+        public static Matrix4x4 Perspective(float fFovDegrees, float fAspectRatio, float fNear, float fFar)
         {
-            float tanHalfFovy = (float)(Math.Tan(fovy.ToRadians() / 2.0));
+            float fCotHalfFovyRad = 1.0f / ((float)(Math.Tan(fFovDegrees.ToRadians() / 2.0)));
             Matrix4x4 m = new Matrix4x4();
-            m.M11 = (float)(1 / (aspect * tanHalfFovy));
-            m.M22 = (float)(1 / (tanHalfFovy));
-            m.M33 = (float)(-(zNear + zFar) / (zNear - zFar));
+            m.M11 = (float)fAspectRatio * fCotHalfFovyRad;
+            m.M22 = (float)(fCotHalfFovyRad);
+            m.M33 = (float)(fFar / (fFar - fNear));
             m.M43 = (float)(1);
-            m.M34 = (float)(2.0 * zFar * zNear) / (zNear - zFar);
-            return m;
-        }
+            m.M34 = (float)(- fFar * fNear) / (fFar - fNear);
+            m.M44 = 0.0f;
 
-        /// <summary>
-        /// Builds a perspective projection matrix based on a field of view.
-        /// </summary>
-        public static Matrix4x4 PerspectiveFov(float fov, float width, float height, float zNear, float zFar)
-        {
-            if (width <= 0) throw new ArgumentOutOfRangeException("width");
-            if (height <= 0) throw new ArgumentOutOfRangeException("height");
-            if (fov <= 0) throw new ArgumentOutOfRangeException("fov");
-            float h = (float)(Math.Cos((double)fov / 2.0) / Math.Sin((double)fov / 2.0));
-            float w = h * (height / width);
-            Matrix4x4 m = new Matrix4x4();
-            m.M11 = w;
-            m.M22 = h;
-            m.M33 = -(zFar + zNear) / (zFar - zNear);
-            m.M34 = -1;
-            m.M43 = -(2 * zFar * zNear) / (zFar - zNear);
-            return m;
+            return Matrix4x4.Transpose(m);
         }
 
         /// <summary>
@@ -386,33 +332,58 @@ namespace WindCalculator.Model
         /// <returns></returns>
         public static Vector4 WorldToScreen(Vector4 point3D, Matrix4x4 model_matrix, Matrix4x4 projection_matrix, Matrix4x4 view_matrix, double width, double height)
         {
+            // Coordinates are assumed to be in world space
+
             //Console.WriteLine(view_matrix.ToString());
             //Console.WriteLine(projection_matrix.ToString());
 
-            // Move and scale the points
-            //model_matrix = model_matrix.Translate(new Vector4(-5, -5, 0.0f, 0.0f));
-            Vector4 new_point = model_matrix.MatrixVectorProduct(point3D);
-            
-            Matrix4x4 viewProjectionMatrix = Matrix4x4.Multiply(projection_matrix, view_matrix );
+            // Move and scale the model
+            Vector4 newPoint = model_matrix.MatrixVectorProduct(point3D);
 
-            // Camera coordinate - view space
-            Vector4 view_coord = viewProjectionMatrix.MatrixVectorProduct(new_point);
+            // Transform into view
+            Vector4 t1 = view_matrix.MatrixVectorProduct(newPoint);
 
-            // Coords of the screen in camera
-            //Vector4 screen_coord = new Vector4(view_coord.X / view_coord.Z, view_coord.Y / view_coord.Z, 0.0f, 1.0f);
+            // Project onto screen
+            t1 = projection_matrix.MatrixVectorProduct(t1);
+
+            // Project
+            t1.X = t1.X / t1.W;
+            t1.Y = t1.Y / t1.W;
+            t1.Z = t1.Z / t1.W;
+            t1.W = t1.W / t1.W;
+
+            Vector4 vOffSetView = new Vector4(1.0f, 1.0f, 0.0f, 0.0f);
+
+            t1 = Vector4.Add(t1, vOffSetView);
+
+            t1.X *= (float)(0.5f * width);
+            t1.Y *= (float)(0.5f * height);
+
+            vOffSetView = new Vector4((float)width, (float)height, 0.0f, 0.0f);
+            t1 = Vector4.Add(t1, vOffSetView);
+
+            return t1;
+
+            //Matrix4x4 viewProjectionMatrix = Matrix4x4.Multiply(projection_matrix, view_matrix );
+
+            //// Camera coordinate - view space
+            //Vector4 view_coord = viewProjectionMatrix.MatrixVectorProduct(new_point);
+
+            //// Coords of the screen in camera
+            ////Vector4 screen_coord = new Vector4(view_coord.X / view_coord.Z, view_coord.Y / view_coord.Z, 0.0f, 1.0f);
 
 
-            //// transform world to normalized clipping coords (raster coords)
-            //Vector4 clip_coord = new Vector4((float)((screen_coord.X + width / 2.0) / width), (float)((screen_coord.Y + height / 2.0) / height), 0.0f, 1.0f);
-            //Vector4 clip_coord = new Vector4((float)((screen_coord.X) * width), (float)((screen_coord.Y) * height), 0.0f, 1.0f);
+            ////// transform world to normalized clipping coords (raster coords)
+            ////Vector4 clip_coord = new Vector4((float)((screen_coord.X + width / 2.0) / width), (float)((screen_coord.Y + height / 2.0) / height), 0.0f, 1.0f);
+            ////Vector4 clip_coord = new Vector4((float)((screen_coord.X) * width), (float)((screen_coord.Y) * height), 0.0f, 1.0f);
 
-            //// Invert the y coordinate
-            Vector4 canvas_coord = new Vector4((float)(Math.Round(view_coord.X)), (float)(Math.Round((1 - view_coord.Y / height) * height / 2.0f)), 0.0f, 1.0f);
-            ////float winX = (float)Math.Round(((screen_coord.X + width / 2) * width);
-            //// Calcuate the -Y because Y axis is oriented top->down
-            ////float winY = (float)Math.Round(((1 - view_coord.Y) / 2.0) * height);
+            ////// Invert the y coordinate
+            //Vector4 canvas_coord = new Vector4((float)(Math.Round(clip_coord.X)), (float)(Math.Round((1 - clip_coord.Y / height) * height / 2.0f)), 0.0f, 1.0f);
+            //////float winX = (float)Math.Round(((screen_coord.X + width / 2) * width);
+            ////// Calcuate the -Y because Y axis is oriented top->down
+            //////float winY = (float)Math.Round(((1 - view_coord.Y) / 2.0) * height);
 
-            return canvas_coord;
+            //return canvas_coord;
         }
 
         /// <summary>

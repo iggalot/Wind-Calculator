@@ -1,7 +1,9 @@
 ﻿using ASCE7_10Library;
 using DrawingHelpersLibrary;
 using System;
+using System.ComponentModel;
 using System.Numerics;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -18,6 +20,8 @@ namespace WindCalculator
     {
         //public const double PRESSURE_TEXT_HT = 10;
         //public const double STRUCTURE_DIM_TEXT_HT = 20;
+        private static BackgroundWorker backgroundWorker;
+
 
         // Stores the last mouse point
         private Vector4 lastMousePoint { get; set; } = new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -39,6 +43,54 @@ namespace WindCalculator
             // Add keyevent here
             this.KeyDown += new KeyEventHandler(MainWindow_KeyDown);
             OnUserCreate();
+
+            // Create a thread for graphics rendering
+            backgroundWorker = new BackgroundWorker
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+
+            backgroundWorker.DoWork += backgroundWorker_DoWork;
+            backgroundWorker.ProgressChanged += backgroundWorker_ProgressChanged;
+            backgroundWorker.RunWorkerCompleted += backgroundWorker_RunWorkerCompleted;
+
+            backgroundWorker.RunWorkerAsync();
+
+            //if (backgroundWorker.IsBusy)
+            //{
+            //    backgroundWorker.CancelAsync();
+            //}
+        }
+
+
+        private void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            OnUserUpdate();
+            Console.WriteLine("Operation Completed :" + e.Result);
+        }
+
+        private void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            Console.WriteLine("Completed" + e.ProgressPercentage + "%");
+        }
+
+        private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+ //           backgroundWorker.ReportProgress(i);
+            MessageBox.Show("In Background worker");
+            Thread.Sleep(1000);
+            e.Result = 1000;
+
+            //for (int i=0; i<200; i++)
+            //{
+            //    backgroundWorker.ReportProgress(i);
+            //    MessageBox.Show("In Background worker");
+            //    Thread.Sleep(1000);
+            //    e.Result = 1000;
+            //    OnUserUpdate();
+            //}
+
         }
 
 
@@ -132,7 +184,7 @@ namespace WindCalculator
             double SCALE_FACTOR = Math.Min(SCALE_FACTOR_HORIZ, SCALE_FACTOR_VERT);
 
             // create our camera object
-            Camera camera = new Camera(canvas, (float)-50, 50, -50, 0, 1, 0, 90, 0);
+            Camera camera = new Camera(canvas, (float)0, 0, -200, 0, 1, 0, 90, 0);
     
             BuildingViewModel bldg_vm = new BuildingViewModel(canvas, camera, bldg, SCALE_FACTOR, orient);
             PressureViewModel pressure_vm = new PressureViewModel(canvas, wind_prov, bldg_vm, title, orient, wind_case);
@@ -195,36 +247,36 @@ namespace WindCalculator
                 if (e.Key == Key.W)
                 {
                     WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(0, 0, -25, 1);
-                    WindVM_East_A.BuildingVM.CameraObj.Update();
+                    WindVM_East_A.BuildingVM.Update();
                 }
 
                 if (e.Key == Key.S)
                 {
                     WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(0, 0, 25, 1);
-                    WindVM_East_A.BuildingVM.CameraObj.Update();
+                    WindVM_East_A.BuildingVM.Update();
                 }
 
                 if (e.Key == Key.A)
                 {
                     WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(-25, 0, 0, 1);
-                    WindVM_East_A.BuildingVM.CameraObj.Update();
+                    WindVM_East_A.BuildingVM.Update();
                 }
 
                 if (e.Key == Key.D)
                 {
                     WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(25, 0, 0, 1);
-                    WindVM_East_A.BuildingVM.CameraObj.Update();
+                    WindVM_East_A.BuildingVM.Update();
                 }
                 if (e.Key == Key.Space)
                 {
                     WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(0, 25, 0, 1);
-                    WindVM_East_A.BuildingVM.CameraObj.Update();
+                    WindVM_East_A.BuildingVM.Update();
                 }
 
                 if (e.Key == Key.R)
                 {
                     WindVM_East_A.BuildingVM.CameraObj.CameraPosition = WindVM_East_A.BuildingVM.CameraObj.OriginalPosition;
-                    WindVM_East_A.BuildingVM.CameraObj.Update();
+                    WindVM_East_A.BuildingVM.Update();
                 }
             }
 
