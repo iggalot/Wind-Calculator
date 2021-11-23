@@ -177,6 +177,8 @@ namespace WindCalculator.ViewModel
 
         public void Draw(double dim_text_ht)
         {
+            Update();
+
             // Draw coord info
             double text_ht = 12;
             DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, 0, 0, "Model COORDS: ", Brushes.Black, text_ht);

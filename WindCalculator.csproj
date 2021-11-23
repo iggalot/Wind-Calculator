@@ -111,6 +111,10 @@
       <Project>{8b758ae0-4a37-4642-a50f-23f18cb55ba2}</Project>
       <Name>DrawingHelpersLibrary</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DrawingPipelineLibrary\DrawingPipelineLibrary.csproj">
+      <Project>{66ad5a48-2cad-4261-9378-44703541d558}</Project>
+      <Name>DrawingPipelineLibrary</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MathLibrary\MathLibrary.csproj">
       <Project>{e6d73712-5361-42c0-a572-7adff6b9a317}</Project>
       <Name>MathLibrary</Name>

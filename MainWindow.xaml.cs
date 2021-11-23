@@ -1,5 +1,7 @@
 ﻿using ASCE7_10Library;
 using DrawingHelpersLibrary;
+using DrawingPipeline;
+using DrawingPipeline.DirectX;
 using System;
 using System.ComponentModel;
 using System.Numerics;
@@ -18,10 +20,9 @@ namespace WindCalculator
     /// </summary>
     public partial class MainWindow : Window
     {
+        private static bool bAppNeedsUpdate = false;
         //public const double PRESSURE_TEXT_HT = 10;
         //public const double STRUCTURE_DIM_TEXT_HT = 20;
-        private static BackgroundWorker backgroundWorker;
-
 
         // Stores the last mouse point
         private Vector4 lastMousePoint { get; set; } = new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -34,6 +35,69 @@ namespace WindCalculator
         public WindViewModel WindVM_North_A { get; set; }
         public WindViewModel WindVM_North_B { get; set; }
 
+        // Threads
+        private Thread ThreadModel { get; set; }
+        private Thread ThreadUI { get; set; }
+        private Thread ThreadGraphics { get; set; }
+
+        // Signals the application to quit
+        public bool AppShouldShutdown { get; private set; } = false;
+        public bool AppNeedsUpdate
+        {
+            get
+            {
+               // WriteToConsole(Thread.CurrentThread.Name + " has locked the mutex");
+                return bAppNeedsUpdate;
+            }
+            set
+            {
+                // make changes
+                ChangeAppNeedsUpdateStatus(value);
+            }
+        }
+
+        internal void ChangeAppNeedsUpdateStatus(bool value)
+        {
+            // if nothing changed, no need to do anything.
+            if (bAppNeedsUpdate == value)
+            {
+                WriteToConsole("-- value not changed because it is already the same");
+                return;
+            }
+
+            lock (this)
+            {
+                WriteToConsole(Thread.CurrentThread.Name + " has locked app update to change for " + value.ToString());
+                bAppNeedsUpdate = value;
+                WriteToConsole(Thread.CurrentThread.Name + " has released app update to new value " + bAppNeedsUpdate.ToString());
+            }
+            //// Otherwise lock the mutex to prevent a race condition
+            //SemaphoreLock.WaitOne();
+            //WriteToConsole(Thread.CurrentThread.Name + " has locked the semaphore");
+
+            //// Toggle the flag
+            //bAppNeedsUpdate = !bAppNeedsUpdate;
+            //WriteToConsole(Thread.CurrentThread.Name + " has changed the flag condition");
+
+            //// and unlock the mutex
+            //SemaphoreLock.Release(1);
+            //WriteToConsole(Thread.CurrentThread.Name + " has released the semaphore");
+
+        }
+
+        // A semaphore lock
+        private static Semaphore SemaphoreLock = new Semaphore(0,1);
+
+        public int GaphicsRefreshTimer { get; set; } = 100;  // milliseconds between refresh checks
+        public int ModelRefreshTimer { get; set; } = 100;  // milliseconds between model update checks
+        public int UIRefreshTimer { get; set; } = 100;  // milliseconds between UI update checks
+        public int AppUpdateTimer { get; set; } = 200; // milliseconds between application update
+
+        public bool DirectXEnabled { get; set; } = true;
+
+        // The pipeline to use for rendering graphics.
+        public BaseDrawingPipeline Pipeline { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -42,58 +106,163 @@ namespace WindCalculator
 
             // Add keyevent here
             this.KeyDown += new KeyEventHandler(MainWindow_KeyDown);
+
+            // Create threads
+            // thread 1 -- Model and calculations
+            // thread 2 -- UI handling
+            // thread 3 -- Graphics / DirectX
+
+            if(DirectXEnabled)
+            {
+                ThreadGraphics = new Thread(InitializeDirectXGraphicsThread);
+                ThreadGraphics.Name = "DirectX Graphics thread";
+            } else
+            {
+                ThreadGraphics = new Thread(InitializeWPFGraphicsThread);
+                ThreadGraphics.Name = "WPF Graphics thread";
+            }
+
+            ThreadUI = new Thread(InitializeUIThread);
+            ThreadUI.Name = "Application UI Thread";
+
+            ThreadModel = new Thread(InitializeModelThread);
+            ThreadModel.Name = "Model thread";
+
+            // Start the threads
+            ThreadGraphics.Start();
+            ThreadModel.Start();
+
+            ThreadUI.Start();
+
+            while(true)
+            {
+                Thread.Sleep(AppUpdateTimer);
+                WriteToConsole("Application needs updating....");
+                WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to TRUE.");
+                AppNeedsUpdate = true;
+                WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
+            }
+            // Wait for the threads to finish
+            ThreadGraphics.Join();
+            ThreadUI.Join();
+            ThreadModel.Join();
+        }
+
+        /// <summary>
+        /// Thread that controls creation of the model and calculations
+        /// </summary>
+        private void InitializeModelThread()
+        {
+            WriteToConsole("Initializing Model...");
+            // Create the model info
             OnUserCreate();
 
-            // Create a thread for graphics rendering
-            backgroundWorker = new BackgroundWorker
+            // Primary render loop
+            while (!AppShouldShutdown)
             {
-                WorkerReportsProgress = true,
-                WorkerSupportsCancellation = true
-            };
+                // if the App needs Updating, lock the mutex and perform updating.
+                while (AppNeedsUpdate)
+                {
+                    //                    Pipeline.Update();
+                    WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to FALSE.");
+                    AppNeedsUpdate = false;
+                    WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
+                    continue;
+                }
 
-            backgroundWorker.DoWork += backgroundWorker_DoWork;
-            backgroundWorker.ProgressChanged += backgroundWorker_ProgressChanged;
-            backgroundWorker.RunWorkerCompleted += backgroundWorker_RunWorkerCompleted;
-
-            backgroundWorker.RunWorkerAsync();
-
-            //if (backgroundWorker.IsBusy)
-            //{
-            //    backgroundWorker.CancelAsync();
-            //}
+                Thread.Sleep(ModelRefreshTimer);
+            }
         }
 
-
-        private void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        /// <summary>
+        /// Helper function to control thread safe writing of the console.
+        /// </summary>
+        /// <param name="v"></param>
+        private void WriteToConsole(string v)
         {
-            OnUserUpdate();
-            Console.WriteLine("Operation Completed :" + e.Result);
+            lock (this)
+            {
+                Console.WriteLine(v);
+            }
         }
 
-        private void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        /// <summary>
+        /// Thread that controls UI items
+        /// </summary>
+        private void InitializeUIThread()
         {
-            Console.WriteLine("Completed" + e.ProgressPercentage + "%");
+            WriteToConsole("Initializing UI...");
+
+            // Primary render loop
+            while (!AppShouldShutdown)
+            {
+                // if the App needs Updating, lock the mutex and perform updating.
+                while (AppNeedsUpdate)
+                {
+                    //                    Pipeline.Update();
+                    WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to FALSE.");
+                    AppNeedsUpdate = false;
+                    WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
+
+                    continue;
+                }
+
+                Thread.Sleep(UIRefreshTimer);
+            }
+            //            Draw(MainCanvas);
+            //            Draw(Canvas2);
+            //            Draw(Canvas3);
+            //            Draw(Canvas4);
         }
 
-        private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+        /// <summary>
+        /// Thread that controls graphics rendering
+        /// </summary>
+        private void InitializeDirectXGraphicsThread()
         {
- //           backgroundWorker.ReportProgress(i);
-            MessageBox.Show("In Background worker");
-            Thread.Sleep(1000);
-            e.Result = 1000;
+            WriteToConsole("Initializing DirectX...");
 
-            //for (int i=0; i<200; i++)
-            //{
-            //    backgroundWorker.ReportProgress(i);
-            //    MessageBox.Show("In Background worker");
-            //    Thread.Sleep(1000);
-            //    e.Result = 1000;
-            //    OnUserUpdate();
-            //}
 
+            // Create the drawing pipeline to be used
+            Pipeline = new DirectXDrawingPipeline();
+
+            // Primary render loop
+            while (!AppShouldShutdown)
+            {
+                // if the App needs Updating, lock the mutex and perform updating.
+                while(AppNeedsUpdate)
+                {
+                    //                    Pipeline.Update();
+                    WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to FALSE.");
+                    AppNeedsUpdate = false;
+                    WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
+                    continue;
+                }
+
+                Thread.Sleep(GaphicsRefreshTimer);
+            }
         }
 
+        private void InitializeWPFGraphicsThread()
+        {
+            WriteToConsole("Initializing WPF Grapgics...");
 
+            Pipeline = new CanvasDrawingPipeline(MainCanvas);
+
+            while (!AppShouldShutdown)
+            {
+                while (AppNeedsUpdate)
+                {
+                    //Pipeline.Update();
+                    WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to FALSE.");
+                    AppNeedsUpdate = false;
+                    WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
+                    continue;
+                }
+
+                Thread.Sleep(GaphicsRefreshTimer);
+            }
+        }
 
         /// <summary>
         /// Routine that runs everytime it is called (once per frame?  after user input?)
@@ -112,10 +281,7 @@ namespace WindCalculator
             Canvas3.Children.Clear();
             Canvas4.Children.Clear();
 
-            Draw(MainCanvas);
-            Draw(Canvas2);
-            Draw(Canvas3);
-            Draw(Canvas4);
+
         }
 
         /// <summary>
@@ -168,10 +334,10 @@ namespace WindCalculator
             WindProvisions wind_prov_north = new WindProvisions(V, bldg_North, exp);
 
             // Create our viewmodels
-            WindVM_East_A = CreateWindViewModels(MainCanvas, bldg_East, wind_prov_east, WindOrientations.WIND_ORIENTATION_NORMALTORIDGE, WindCasesDesignation.WIND_CASE_A);
-            WindVM_East_B = CreateWindViewModels(Canvas2, bldg_East, wind_prov_east, WindOrientations.WIND_ORIENTATION_NORMALTORIDGE, WindCasesDesignation.WIND_CASE_B);
-            WindVM_North_A = CreateWindViewModels(Canvas3, bldg_North, wind_prov_north, WindOrientations.WIND_ORIENTATION_PARALLELTORIDGE, WindCasesDesignation.WIND_CASE_A);
-            WindVM_North_B = CreateWindViewModels(Canvas4, bldg_North, wind_prov_north, WindOrientations.WIND_ORIENTATION_PARALLELTORIDGE, WindCasesDesignation.WIND_CASE_B);
+ //           WindVM_East_A = CreateWindViewModels(MainCanvas, bldg_East, wind_prov_east, WindOrientations.WIND_ORIENTATION_NORMALTORIDGE, WindCasesDesignation.WIND_CASE_A);
+ //           WindVM_East_B = CreateWindViewModels(Canvas2, bldg_East, wind_prov_east, WindOrientations.WIND_ORIENTATION_NORMALTORIDGE, WindCasesDesignation.WIND_CASE_B);
+ //           WindVM_North_A = CreateWindViewModels(Canvas3, bldg_North, wind_prov_north, WindOrientations.WIND_ORIENTATION_PARALLELTORIDGE, WindCasesDesignation.WIND_CASE_A);
+ //           WindVM_North_B = CreateWindViewModels(Canvas4, bldg_North, wind_prov_north, WindOrientations.WIND_ORIENTATION_PARALLELTORIDGE, WindCasesDesignation.WIND_CASE_B);
         }
 
         private WindViewModel CreateWindViewModels(Canvas canvas, BuildingInfo bldg, WindProvisions wind_prov, WindOrientations orient, WindCasesDesignation wind_case)
