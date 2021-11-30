@@ -61,15 +61,15 @@ namespace WindCalculator
             // if nothing changed, no need to do anything.
             if (bAppNeedsUpdate == value)
             {
-                WriteToConsole("-- value not changed because it is already the same");
+                //WriteToConsole("-- value not changed because it is already the same");
                 return;
             }
 
             lock (this)
             {
-                WriteToConsole(Thread.CurrentThread.Name + " has locked app update to change for " + value.ToString());
+                //WriteToConsole(Thread.CurrentThread.Name + " has locked app update to change for " + value.ToString());
                 bAppNeedsUpdate = value;
-                WriteToConsole(Thread.CurrentThread.Name + " has released app update to new value " + bAppNeedsUpdate.ToString());
+                //WriteToConsole(Thread.CurrentThread.Name + " has released app update to new value " + bAppNeedsUpdate.ToString());
             }
             //// Otherwise lock the mutex to prevent a race condition
             //SemaphoreLock.WaitOne();
@@ -85,14 +85,12 @@ namespace WindCalculator
 
         }
 
-        // A semaphore lock
-        private static Semaphore SemaphoreLock = new Semaphore(0,1);
-
         public int GaphicsRefreshTimer { get; set; } = 100;  // milliseconds between refresh checks
         public int ModelRefreshTimer { get; set; } = 100;  // milliseconds between model update checks
         public int UIRefreshTimer { get; set; } = 100;  // milliseconds between UI update checks
         public int AppUpdateTimer { get; set; } = 200; // milliseconds between application update
 
+        // Flag to desginate whether directXX drawing should be used or more simple WPF canvas drawing
         public bool DirectXEnabled { get; set; } = true;
 
         // The pipeline to use for rendering graphics.
@@ -107,11 +105,11 @@ namespace WindCalculator
             // Add keyevent here
             this.KeyDown += new KeyEventHandler(MainWindow_KeyDown);
 
+
             // Create threads
             // thread 1 -- Model and calculations
             // thread 2 -- UI handling
             // thread 3 -- Graphics / DirectX
-
             if(DirectXEnabled)
             {
                 ThreadGraphics = new Thread(InitializeDirectXGraphicsThread);
@@ -128,24 +126,28 @@ namespace WindCalculator
             ThreadModel = new Thread(InitializeModelThread);
             ThreadModel.Name = "Model thread";
 
+
             // Start the threads
             ThreadGraphics.Start();
-            ThreadModel.Start();
 
             ThreadUI.Start();
+            ThreadModel.Start();
 
-            while(true)
-            {
-                Thread.Sleep(AppUpdateTimer);
-                WriteToConsole("Application needs updating....");
-                WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to TRUE.");
-                AppNeedsUpdate = true;
-                WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
-            }
+
+            // Thread TESTING for updates and locking.
+            //while(true)
+            //{
+            //    Thread.Sleep(AppUpdateTimer);
+            //    WriteToConsole("Application needs updating....");
+            //    WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to TRUE.");
+            //    AppNeedsUpdate = true;
+            //    WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
+            //}
+
             // Wait for the threads to finish
-            ThreadGraphics.Join();
-            ThreadUI.Join();
-            ThreadModel.Join();
+            //ThreadGraphics.Join();
+            //ThreadUI.Join();
+            //ThreadModel.Join();
         }
 
         /// <summary>
@@ -154,6 +156,7 @@ namespace WindCalculator
         private void InitializeModelThread()
         {
             WriteToConsole("Initializing Model...");
+
             // Create the model info
             OnUserCreate();
 
@@ -164,9 +167,9 @@ namespace WindCalculator
                 while (AppNeedsUpdate)
                 {
                     //                    Pipeline.Update();
-                    WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to FALSE.");
+                   // WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to FALSE.");
                     AppNeedsUpdate = false;
-                    WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
+                    //WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
                     continue;
                 }
 
@@ -175,9 +178,9 @@ namespace WindCalculator
         }
 
         /// <summary>
-        /// Helper function to control thread safe writing of the console.
+        /// Helper function to control thread safe writing to the console.
         /// </summary>
-        /// <param name="v"></param>
+        /// <param name="v">string to be printed</param>
         private void WriteToConsole(string v)
         {
             lock (this)
@@ -200,9 +203,10 @@ namespace WindCalculator
                 while (AppNeedsUpdate)
                 {
                     //                    Pipeline.Update();
-                    WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to FALSE.");
+                    
+                    //WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to FALSE.");
                     AppNeedsUpdate = false;
-                    WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
+                    //WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
 
                     continue;
                 }
@@ -225,7 +229,7 @@ namespace WindCalculator
 
             // Create the drawing pipeline to be used
             Pipeline = new DirectXDrawingPipeline();
-
+            Pipeline.RunPipeline();
             // Primary render loop
             while (!AppShouldShutdown)
             {
@@ -233,9 +237,9 @@ namespace WindCalculator
                 while(AppNeedsUpdate)
                 {
                     //                    Pipeline.Update();
-                    WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to FALSE.");
+                    //WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to FALSE.");
                     AppNeedsUpdate = false;
-                    WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
+                    //WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
                     continue;
                 }
 
@@ -245,7 +249,7 @@ namespace WindCalculator
 
         private void InitializeWPFGraphicsThread()
         {
-            WriteToConsole("Initializing WPF Grapgics...");
+            WriteToConsole("Initializing WPF Graphics...");
 
             Pipeline = new CanvasDrawingPipeline(MainCanvas);
 
@@ -254,9 +258,9 @@ namespace WindCalculator
                 while (AppNeedsUpdate)
                 {
                     //Pipeline.Update();
-                    WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to FALSE.");
+                    //WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to FALSE.");
                     AppNeedsUpdate = false;
-                    WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
+                    //WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
                     continue;
                 }
 
@@ -270,10 +274,10 @@ namespace WindCalculator
         private void OnUserUpdate()
         {
             // Update the view models
-            WindVM_East_A.Update();
-            WindVM_East_B.Update();
-            WindVM_North_A.Update();
-            WindVM_North_B.Update();
+            //WindVM_East_A.Update();
+            //WindVM_East_B.Update();
+            //WindVM_North_A.Update();
+            //WindVM_North_B.Update();
 
             // Clear the canvas
             MainCanvas.Children.Clear();
@@ -451,38 +455,62 @@ namespace WindCalculator
 
         private void MainCanvas_MouseMove(object sender, MouseEventArgs e)
         {
-            // if our  camera state isn't active do nothing
-            if (WindVM_East_A.BuildingVM.CameraObj.IsActive == false)
-            {
-                e.Handled = true;
-                return;
-            }
+            //// if our  camera state isn't active do nothing
+            //if (WindVM_East_A.BuildingVM.CameraObj.IsActive == false)
+            //{
+            //    e.Handled = true;
+            //    return;
+            //}
 
-            Point pt = Mouse.GetPosition(MainCanvas);
-            Vector4 currentPoint = new Vector4((float)(pt.X), (float)(pt.Y), 0.0f, 0.0f);
+            //Point pt = Mouse.GetPosition(MainCanvas);
+            //Vector4 currentPoint = new Vector4((float)(pt.X), (float)(pt.Y), 0.0f, 0.0f);
 
-            Vector4 distMoved = Vector4.Subtract(currentPoint, lastMousePoint);
+            //Vector4 distMoved = Vector4.Subtract(currentPoint, lastMousePoint);
 
-            WindVM_East_A.BuildingVM.CameraObj.ProcessMouseMovement(distMoved.X, distMoved.Y, true);
-            e.Handled = true;
+            //WindVM_East_A.BuildingVM.CameraObj.ProcessMouseMovement(distMoved.X, distMoved.Y, true);
+            //e.Handled = true;
 
-            lastMousePoint = currentPoint;
+            //lastMousePoint = currentPoint;
 
-            OnUserUpdate();
+            //OnUserUpdate();
         }
 
         private void MainCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            CameraMovementDirections dir;
-            float deltaTime = 5.0f;
-            if (WindVM_East_A.BuildingVM.CameraObj.IsActive)
-            {
-                dir = (e.Delta > 0) ? CameraMovementDirections.FORWARD : CameraMovementDirections.BACKWARD;
-                WindVM_East_A.BuildingVM.CameraObj.ProcessKeyboard(dir, deltaTime);
-                WindVM_East_A.BuildingVM.CameraObj.Update();
-            }
+            //CameraMovementDirections dir;
+            //float deltaTime = 5.0f;
+            //if (WindVM_East_A.BuildingVM.CameraObj.IsActive)
+            //{
+            //    dir = (e.Delta > 0) ? CameraMovementDirections.FORWARD : CameraMovementDirections.BACKWARD;
+            //    WindVM_East_A.BuildingVM.CameraObj.ProcessKeyboard(dir, deltaTime);
+            //    WindVM_East_A.BuildingVM.CameraObj.Update();
+            //}
 
-            OnUserUpdate();
+            //OnUserUpdate();
+        }
+
+        private void Model1_Click(object sender, RoutedEventArgs e)
+        {
+            CreateModel1();
+        }
+
+        private void CreateModel1()
+        {
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.Model = new DrawingPipelineLibrary.DirectX.DModel();
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.Model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device);
+
+        }
+
+        private void CreateModel2()
+        {
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.Model = new DrawingPipelineLibrary.DirectX.DModel();
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.Model.InitializeBuffer(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device);
+
+        }
+
+        private void Model2_Click(object sender, RoutedEventArgs e)
+        {
+            CreateModel2();
         }
     }
 }

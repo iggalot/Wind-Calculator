@@ -21,5 +21,10 @@
         <Canvas Grid.Row="0" Grid.Column="1" Margin="5" Name="Canvas2" Height="300" Width="300" Background="LightGray" />
         <Canvas Grid.Row="1" Grid.Column="1" Margin="5" Name="Canvas3" Height="300" Width="300" Background="LightGray" />
         <Canvas Grid.Row="2" Grid.Column="1" Margin="5" Name="Canvas4" Height="300" Width="300" Background="LightGray" />
+
+        <StackPanel Orientation="Horizontal" >
+            <Button x:Name="Model1" Click="Model1_Click" Width="100" Height="50"/>
+            <Button x:Name="Model2" Click="Model2_Click" Width="100" Height="50"/>
+        </StackPanel>
     </Grid>
 </Window>
