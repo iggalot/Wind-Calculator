@@ -91,7 +91,7 @@ namespace WindCalculator
         public int AppUpdateTimer { get; set; } = 200; // milliseconds between application update
 
         // Flag to desginate whether directXX drawing should be used or more simple WPF canvas drawing
-        public bool DirectXEnabled { get; set; } = true;
+        public bool bIsDirectXEnabled { get; set; } = true;
 
         // The pipeline to use for rendering graphics.
         public BaseDrawingPipeline Pipeline { get; set; }
@@ -105,12 +105,15 @@ namespace WindCalculator
             // Add keyevent here
             this.KeyDown += new KeyEventHandler(MainWindow_KeyDown);
 
+            this.Left = 0.0f;
+            this.Top = 0.0f;
+
 
             // Create threads
             // thread 1 -- Model and calculations
             // thread 2 -- UI handling
             // thread 3 -- Graphics / DirectX
-            if(DirectXEnabled)
+            if(bIsDirectXEnabled)
             {
                 ThreadGraphics = new Thread(InitializeDirectXGraphicsThread);
                 ThreadGraphics.Name = "DirectX Graphics thread";
@@ -129,7 +132,6 @@ namespace WindCalculator
 
             // Start the threads
             ThreadGraphics.Start();
-
             ThreadUI.Start();
             ThreadModel.Start();
 
@@ -279,11 +281,11 @@ namespace WindCalculator
             //WindVM_North_A.Update();
             //WindVM_North_B.Update();
 
-            // Clear the canvas
-            MainCanvas.Children.Clear();
-            Canvas2.Children.Clear();
-            Canvas3.Children.Clear();
-            Canvas4.Children.Clear();
+            //// Clear the canvas
+            //MainCanvas.Children.Clear();
+            //Canvas2.Children.Clear();
+            //Canvas3.Children.Clear();
+            //Canvas4.Children.Clear();
 
 
         }
@@ -381,76 +383,29 @@ namespace WindCalculator
 
             canvas.Children.Clear();
 
-            // Center point of current canvas
-            double x_center = canvas.Width * 0.5;
-            double y_center = canvas.Height * 0.5;
+            //// Center point of current canvas
+            //double x_center = canvas.Width * 0.5;
+            //double y_center = canvas.Height * 0.5;
 
-            // Draw the centerlines of the canvas
-            DrawingHelpers.DrawLine(canvas, x_center, 0, x_center, 2.0 * y_center, Brushes.BlueViolet, 1, Linetypes.LINETYPE_PHANTOM);
-            DrawingHelpers.DrawLine(canvas, 0, y_center, 2.0 * x_center, y_center, Brushes.BlueViolet, 1, Linetypes.LINETYPE_PHANTOM);
+            //// Draw the centerlines of the canvas
+            //DrawingHelpers.DrawLine(canvas, x_center, 0, x_center, 2.0 * y_center, Brushes.BlueViolet, 1, Linetypes.LINETYPE_PHANTOM);
+            //DrawingHelpers.DrawLine(canvas, 0, y_center, 2.0 * x_center, y_center, Brushes.BlueViolet, 1, Linetypes.LINETYPE_PHANTOM);
 
-            // Draw the camera state message
-            string cam_str = (WindVM_East_A.BuildingVM.CameraObj.IsActive ? "ON" : "OFF");
-            DrawingHelpers.DrawText(canvas, canvas.Width - 100, canvas.Height - 12, 0.0, "CAMERA: " + cam_str, Brushes.Black, 12);
+            //// Draw the camera state message
+            //string cam_str = (WindVM_East_A.BuildingVM.CameraObj.IsActive ? "ON" : "OFF");
+            //DrawingHelpers.DrawText(canvas, canvas.Width - 100, canvas.Height - 12, 0.0, "CAMERA: " + cam_str, Brushes.Black, 12);
 
-            // Draw the drawing objects
-            WindVM_East_A.Draw();
-            //WindVM_East_B.Draw();
-            //WindVM_North_A.Draw();
-            //WindVM_North_B.Draw();
+            //// Draw the drawing objects
+            //WindVM_East_A.Draw();
+            ////WindVM_East_B.Draw();
+            ////WindVM_North_A.Draw();
+            ////WindVM_North_B.Draw();
         }
 
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
-            // toggle the camera state to be active
-            if (e.Key == Key.C)
-            {
-                bool state = WindVM_East_A.BuildingVM.CameraObj.IsActive;
-                WindVM_East_A.BuildingVM.CameraObj.IsActive = (state == true) ? false : true;
-                WindVM_East_A.Update();
-            }
-
-            // Allow our camera functionality.
-            // TODO:: this should be moved to the camera object.
-            if(WindVM_East_A.BuildingVM.CameraObj.IsActive)
-            {
-                if (e.Key == Key.W)
-                {
-                    WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(0, 0, -25, 1);
-                    WindVM_East_A.BuildingVM.Update();
-                }
-
-                if (e.Key == Key.S)
-                {
-                    WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(0, 0, 25, 1);
-                    WindVM_East_A.BuildingVM.Update();
-                }
-
-                if (e.Key == Key.A)
-                {
-                    WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(-25, 0, 0, 1);
-                    WindVM_East_A.BuildingVM.Update();
-                }
-
-                if (e.Key == Key.D)
-                {
-                    WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(25, 0, 0, 1);
-                    WindVM_East_A.BuildingVM.Update();
-                }
-                if (e.Key == Key.Space)
-                {
-                    WindVM_East_A.BuildingVM.CameraObj.CameraPosition += new Vector4(0, 25, 0, 1);
-                    WindVM_East_A.BuildingVM.Update();
-                }
-
-                if (e.Key == Key.R)
-                {
-                    WindVM_East_A.BuildingVM.CameraObj.CameraPosition = WindVM_East_A.BuildingVM.CameraObj.OriginalPosition;
-                    WindVM_East_A.BuildingVM.Update();
-                }
-            }
-
-            OnUserUpdate();
+            // Send the keystroke to the pipeline for processing
+            Pipeline.SetKeyState(e.Key, true);
         }
 
         private void MainCanvas_MouseMove(object sender, MouseEventArgs e)

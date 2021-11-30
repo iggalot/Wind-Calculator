@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WindCalculator"
         mc:Ignorable="d"
-        Title="ASCE7-10 Wind Calculator v1.0" Height="1000" Width="1700" Loaded="OnWindowLoaded" >
+        Title="ASCE7-10 Wind Calculator v1.0" Height="1000" Width="1200" Loaded="OnWindowLoaded" >
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -17,7 +17,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Canvas Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" Margin="100" Name="MainCanvas" Height="700" Width="700" Background="LightGray" MouseMove="MainCanvas_MouseMove" MouseWheel="MainCanvas_MouseWheel"/>
+        <Canvas Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" Margin="100" Name="MainCanvas" Height="700" Width="600" Background="LightGray" MouseMove="MainCanvas_MouseMove" MouseWheel="MainCanvas_MouseWheel"/>
         <Canvas Grid.Row="0" Grid.Column="1" Margin="5" Name="Canvas2" Height="300" Width="300" Background="LightGray" />
         <Canvas Grid.Row="1" Grid.Column="1" Margin="5" Name="Canvas3" Height="300" Width="300" Background="LightGray" />
         <Canvas Grid.Row="2" Grid.Column="1" Margin="5" Name="Canvas4" Height="300" Width="300" Background="LightGray" />
