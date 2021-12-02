@@ -300,8 +300,12 @@ namespace WindCalculator
 
             // building dimension constants
             RiskCategories risk_cat = RiskCategories.II;
-            double wall_ht = 100;  // wall height
-            double b = 100; // length perpendicular to wind
+            float wall_ht = 100;  // wall height
+            float b = 100; // length perpendicular to wind
+            float l = 100; // length parallel to wind
+
+            // Create a building object
+            BuildingModel bldg1 = new BuildingModel(l, b, wall_ht);
 
             // Frame 1
             Vector4 ww_wall_1 = new Vector4(0.0f, (float)wall_ht, 0, 1.0f);
@@ -313,7 +317,6 @@ namespace WindCalculator
             Vector4 lw_wall_2 = new Vector4(100.0f, (float)wall_ht, (float)b, 1.0f);
             Vector4 ridge_2 = new Vector4(50.0f, (float)(wall_ht + 50.0f), (float)b, 1.0f);
 
-            // Create a building object
             // Profile of the roof line
             // TODO:: Need to sort the order of these points or provide some sort of logic (left-to-right) progression of points
 

@@ -363,56 +363,6 @@ namespace WindCalculator.Model
             t1 = Vector4.Add(t1, vOffSetView);
 
             return t1;
-
-            //Matrix4x4 viewProjectionMatrix = Matrix4x4.Multiply(projection_matrix, view_matrix );
-
-            //// Camera coordinate - view space
-            //Vector4 view_coord = viewProjectionMatrix.MatrixVectorProduct(new_point);
-
-            //// Coords of the screen in camera
-            ////Vector4 screen_coord = new Vector4(view_coord.X / view_coord.Z, view_coord.Y / view_coord.Z, 0.0f, 1.0f);
-
-
-            ////// transform world to normalized clipping coords (raster coords)
-            ////Vector4 clip_coord = new Vector4((float)((screen_coord.X + width / 2.0) / width), (float)((screen_coord.Y + height / 2.0) / height), 0.0f, 1.0f);
-            ////Vector4 clip_coord = new Vector4((float)((screen_coord.X) * width), (float)((screen_coord.Y) * height), 0.0f, 1.0f);
-
-            ////// Invert the y coordinate
-            //Vector4 canvas_coord = new Vector4((float)(Math.Round(clip_coord.X)), (float)(Math.Round((1 - clip_coord.Y / height) * height / 2.0f)), 0.0f, 1.0f);
-            //////float winX = (float)Math.Round(((screen_coord.X + width / 2) * width);
-            ////// Calcuate the -Y because Y axis is oriented top->down
-            //////float winY = (float)Math.Round(((1 - view_coord.Y) / 2.0) * height);
-
-            //return canvas_coord;
-        }
-
-        /// <summary>
-        /// Uses the inverted projection matrux to convert a 2D point on the screen back to the 3D point in space.
-        /// </summary>
-        /// <param name="screenPt"></param>
-        /// <param name="view_matrix"></param>
-        /// <param name="projection_matrix"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <returns></returns>
-        public static Vector4 ScreenToWorld(Vector4 screenPt, Matrix4x4 view_matrix, Matrix4x4 projection_matrix, double width, double height)
-        {
-            float x = (float)(2.0 * screenPt.X / width - 1.0f);
-            float y = (float)(-2.0 * screenPt.Y / height + 1.0f);
-            Vector4 new_point = new Vector4(x, y, 0.0f, 1.0f);
-
-            Matrix4x4 result = new Matrix4x4();
-
-            // Attempt to invert the matrix
-            if(!Matrix4x4.Invert(Matrix4x4.Multiply(projection_matrix, view_matrix), out result))
-            {
-                throw new InvalidOperationException("Unable to invert the view projection matrix in ScreentoWorld()");
-            }
-
-            Matrix4x4 viewProjectionInverse = result;
-
-            // transform world to clipping coords
-            return viewProjectionInverse.MatrixVectorProduct(new Vector4(new_point.X, new_point.Y, new_point.Z, 1.0f));
         }
     }
 }
