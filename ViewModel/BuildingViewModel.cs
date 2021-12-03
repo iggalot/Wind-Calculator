@@ -1,5 +1,9 @@
 ﻿using ASCE7_10Library;
 using DrawingHelpersLibrary;
+using DrawingPipeline;
+using DrawingPipeline.DirectX;
+using DrawingPipelineLibrary.DirectX;
+using SharpDX.Direct3D11;
 using System;
 using System.Numerics;
 using System.Windows.Controls;
@@ -10,6 +14,7 @@ namespace WindCalculator.ViewModel
 {
     public class BuildingViewModel
     {
+        public BuildingModel BldgModel { get; set; }
         // Our camera object for this view model
         public Camera CameraObj { get; set; }
         public BuildingInfo Model { get; set; }
@@ -72,6 +77,10 @@ namespace WindCalculator.ViewModel
         /// </summary>
         Matrix4x4 TRS_Matrix { get; set; }
 
+        public BuildingViewModel(BuildingModel model)
+        {
+            BldgModel = model;
+        }
         public BuildingViewModel(Canvas canvas, Camera camera, BuildingInfo bldg, double drawing_scale_factor, WindOrientations orient)
         {
             Model = bldg;
@@ -362,6 +371,150 @@ namespace WindCalculator.ViewModel
             //    DrawingHelpers.DrawDimensionAligned(canvas, LW_H_1_SC.X, RIDGE_1_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht); ;
             //}
 
+        }
+
+        public void Render(bool use_directX, BaseDrawingPipeline pipeline)
+        {
+            if(use_directX)
+            {
+                ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model = new DrawingPipelineLibrary.DirectX.DModel();
+                RenderDirectX((DirectXDrawingPipeline)pipeline);
+                //((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.D3D.Device);
+
+            }
+        }
+
+        /// <summary>
+        /// The routine to render the building as a DirectXX object.
+        /// </summary>
+        /// <param name="pipeline"></param>
+        private void RenderDirectX(DirectXDrawingPipeline pipeline)
+        {
+            try
+            {
+                SharpDX.Vector4 wall1_color = new SharpDX.Vector4(0.5f, 0.3f, 0.2f, 1f);
+                SharpDX.Vector4 wall2_color = new SharpDX.Vector4(0.3f, 0.2f, 0.5f, 1f);
+                SharpDX.Vector4 wall3_color = new SharpDX.Vector4(0.3f, 0.8f, 0.5f, 1f);
+
+
+                // Create the vertex array and load it with data.
+                var vertices = new[]
+                {
+                    // Wall #1
+					// Bottom left.
+					new DColorShader.DVertex()
+                    {
+                        position = new SharpDX.Vector3(0, 0, 0),
+                        color = wall1_color
+                    },
+					// Bottom right.
+					new DColorShader.DVertex()
+                    {
+                        position = new SharpDX.Vector3(BldgModel.Length, 0, 0),
+                        color = wall1_color
+                    },
+					// top Right.
+					new DColorShader.DVertex()
+                    {
+                        position = new SharpDX.Vector3(BldgModel.Length, BldgModel.Height, 0),
+                        color = wall1_color
+                    },
+                    					
+                    // Top left.
+					new DColorShader.DVertex()
+                    {
+                        position = new SharpDX.Vector3(0, BldgModel.Height, 0),
+                        color = wall1_color
+                    },
+
+                                        
+                    // Wall #2
+					// Bottom left.
+                    new DColorShader.DVertex()
+                    {
+                        position = new SharpDX.Vector3(BldgModel.Length, 0, BldgModel.Width),
+                        color = wall2_color
+                    },
+
+					// Bottom right.
+					new DColorShader.DVertex()
+                    {
+                        position = new SharpDX.Vector3(0, 0, BldgModel.Width),
+                        color = wall2_color
+                    },
+					// top Right.
+					new DColorShader.DVertex()
+                    {
+                        position = new SharpDX.Vector3(0, BldgModel.Height, BldgModel.Width),
+                        color = wall2_color
+                    },
+                    					
+                    // Top left.
+					new DColorShader.DVertex()
+                    {
+                        position = new SharpDX.Vector3(BldgModel.Length, BldgModel.Height, BldgModel.Width),
+                        color = wall2_color
+                    },
+                };
+
+                // Create Indicies for the IndexBuffer.
+                int[] indicies = new int[]
+                {
+                    // Wall1
+                    0, // Bottom left.
+					3, // Top middle.
+					2,  // Bottom right.
+                    0,
+                    2,
+                    1,
+
+                    // Wall2
+                    4,
+                    7,
+                    6,
+                    4,
+                    6,
+                    5,
+
+                    // Windward Wall
+                    5,
+                    3,
+                    0,
+                    5,
+                    6,
+                    3,
+
+                    //Leeward Wall
+                    1,
+                    2,
+                    7,
+                    1,
+                    7,
+                    4
+                };
+
+                Device device = ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.D3D.Device;
+
+                // Set number of vertices in the vertex array.
+                ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model.VertexCount = vertices.Length;
+
+                // Set number of vertices in the index array.
+                ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model.IndexCount = indicies.Length;
+
+                // Create the vertex buffer.
+                ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model.VertexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.VertexBuffer, vertices);
+
+                // Create the index buffer.
+                ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model.IndexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.IndexBuffer, indicies, ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model.IndexCount * sizeof(int));
+
+                // Delete arrays now that they are in their respective vertex and index buffers.
+                vertices = null;
+                indicies = null;
+            }
+            catch (System.Exception)
+            {
+                throw new InvalidOperationException("Error in Rendering DirectX of the BuildingViewModel");
+            }
         }
     }
 

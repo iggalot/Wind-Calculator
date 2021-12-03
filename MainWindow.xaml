@@ -23,8 +23,10 @@
         <Canvas Grid.Row="2" Grid.Column="1" Margin="5" Name="Canvas4" Height="300" Width="300" Background="LightGray" />
 
         <StackPanel Orientation="Horizontal" >
-            <Button x:Name="Model1" Click="Model1_Click" Width="100" Height="50"/>
-            <Button x:Name="Model2" Click="Model2_Click" Width="100" Height="50"/>
+            <Button x:Name="Model1" Content="Model1" Click="Model1_Click" Width="100" Height="50"/>
+            <Button x:Name="Model2" Content="Model2" Click="Model2_Click" Width="100" Height="50"/>
+            <Button x:Name="Model3" Content="DirectX" Click="Model3_Click" Width="100" Height="50"/>
+
         </StackPanel>
     </Grid>
 </Window>

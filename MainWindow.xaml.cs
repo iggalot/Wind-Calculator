@@ -95,6 +95,7 @@ namespace WindCalculator
 
         // The pipeline to use for rendering graphics.
         public BaseDrawingPipeline Pipeline { get; set; }
+        public BuildingViewModel BuildingVM { get; set; }
 
         public MainWindow()
         {
@@ -306,6 +307,7 @@ namespace WindCalculator
 
             // Create a building object
             BuildingModel bldg1 = new BuildingModel(l, b, wall_ht);
+            BuildingVM = new BuildingViewModel(bldg1);
 
             // Frame 1
             Vector4 ww_wall_1 = new Vector4(0.0f, (float)wall_ht, 0, 1.0f);
@@ -464,11 +466,22 @@ namespace WindCalculator
             ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.Model = new DrawingPipelineLibrary.DirectX.DModel();
             ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.Model.InitializeBuffer(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device);
 
+            
+        }
+
+        private void CreateModel3()
+        {
+            BuildingVM.Render(true, Pipeline);
         }
 
         private void Model2_Click(object sender, RoutedEventArgs e)
         {
             CreateModel2();
+        }
+
+        private void Model3_Click(object sender, RoutedEventArgs e)
+        {
+            CreateModel3();
         }
     }
 }
