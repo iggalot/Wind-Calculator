@@ -373,10 +373,10 @@ namespace WindCalculator.ViewModel
 
         }
 
-        public DModel CreateModel(DirectXDrawingPipeline pipeline)
+        public DModel CreateModel(DirectXDrawingPipeline pipeline, ModelElementTypes element_type)
         {
             DModel model = new DModel();
-            return InitializeDirectXBuffers(pipeline, model);
+            return InitializeDirectXBuffers(pipeline, model, element_type);
         }
         public void Render(bool use_directX, BaseDrawingPipeline pipeline)
         {
@@ -393,7 +393,7 @@ namespace WindCalculator.ViewModel
         /// The routine to render the building as a DirectXX object.
         /// </summary>
         /// <param name="pipeline"></param>
-        private DModel InitializeDirectXBuffers(DirectXDrawingPipeline pipeline, DModel model)
+        private DModel InitializeDirectXBuffers(DirectXDrawingPipeline pipeline, DModel model, ModelElementTypes element_type)
         {
             try
             {
@@ -511,6 +511,8 @@ namespace WindCalculator.ViewModel
 
                 // Create the index buffer.
                 model.IndexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.IndexBuffer, indicies, model.IndexCount * sizeof(int));
+
+                model.ModelElementType = element_type;
 
                 // Delete arrays now that they are in their respective vertex and index buffers.
                 vertices = null;

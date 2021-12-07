@@ -3,6 +3,7 @@ using DrawingHelpersLibrary;
 using DrawingPipeline;
 using DrawingPipeline.DirectX;
 using DrawingPipelineLibrary.DirectX;
+using SharpDX.Direct3D11;
 using System;
 using System.ComponentModel;
 using System.Numerics;
@@ -27,6 +28,10 @@ namespace WindCalculator
 
         // Stores the last mouse point
         private Vector4 lastMousePoint { get; set; } = new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+
+
+        // Gridline model object
+        public Gridlines GridlineModel { get; set; } = new Gridlines();
 
         /// <summary>
         /// The WindProvision view models for this graphic for a wind that is acting on the east face of the building.
@@ -230,9 +235,11 @@ namespace WindCalculator
         {
             WriteToConsole("Initializing DirectX...");
 
-
             // Create the drawing pipeline to be used
             Pipeline = new DirectXDrawingPipeline();
+
+            
+
             Pipeline.RunPipeline();
             // Primary render loop
             while (!AppShouldShutdown)
@@ -297,6 +304,8 @@ namespace WindCalculator
         /// </summary>
         private void OnUserCreate()
         {
+
+
             ExposureCategories exp = ExposureCategories.B;
             double V = 115;   // mph
 
@@ -457,40 +466,59 @@ namespace WindCalculator
 
         private void CreateModel1()
         {
+            // Clear the models
             ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.ModelList.Clear();
+
+            // Create the gridlines
+            GridlineModel = new Gridlines();
+            GridlineModel.CreateModel((DirectXDrawingPipeline)Pipeline);
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(GridlineModel.Model);
+
             DModel model = new DModel();
-            model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device);
+            model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_TRIANGLE);
             ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
         }
 
         private void CreateModel2()
         {
+            // Clear the models
             ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.ModelList.Clear();
 
+            // Create the gridlines
+            GridlineModel = new Gridlines();
+            GridlineModel.CreateModel((DirectXDrawingPipeline)Pipeline);
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(GridlineModel.Model);
+
             DModel model = new DModel();
-            model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device);
+            model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
             ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
 
             model = new DModel();
-            model.InitializeBuffer(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device);
+            model.InitializeBuffer(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
             ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
 
         }
 
         private void CreateModel3()
         {
+            // Clear the models
             ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.ModelList.Clear();
-            
-            DModel model = new DModel();            
-            model = BuildingVM.CreateModel(((DirectXDrawingPipeline)Pipeline));
+
+            // Create the gridlines
+            GridlineModel = new Gridlines();
+            GridlineModel.CreateModel((DirectXDrawingPipeline)Pipeline);
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(GridlineModel.Model);
+
+            DModel model = new DModel();
+            model = BuildingVM.CreateModel((DirectXDrawingPipeline)Pipeline, ModelElementTypes.MODEL_ELEMENT_TRIANGLE);
             ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
 
             model = new DModel();
-            model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device);
+            model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
             ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
 
             model = new DModel();
-            model.InitializeBuffer(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device);
+            model.InitializeBuffer(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
             ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
 
             //BuildingVM.Render(true, Pipeline);
