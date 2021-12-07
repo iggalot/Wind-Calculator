@@ -373,22 +373,27 @@ namespace WindCalculator.ViewModel
 
         }
 
+        public DModel CreateModel(DirectXDrawingPipeline pipeline)
+        {
+            DModel model = new DModel();
+            return InitializeDirectXBuffers(pipeline, model);
+        }
         public void Render(bool use_directX, BaseDrawingPipeline pipeline)
         {
-            if(use_directX)
-            {
-                ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model = new DrawingPipelineLibrary.DirectX.DModel();
-                RenderDirectX((DirectXDrawingPipeline)pipeline);
-                //((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.D3D.Device);
+            //if(use_directX)
+            //{
+            //    ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model = new DrawingPipelineLibrary.DirectX.DModel();
+            //    RenderDirectX((DirectXDrawingPipeline)pipeline);
+            //    //((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.D3D.Device);
 
-            }
+            //}
         }
 
         /// <summary>
         /// The routine to render the building as a DirectXX object.
         /// </summary>
         /// <param name="pipeline"></param>
-        private void RenderDirectX(DirectXDrawingPipeline pipeline)
+        private DModel InitializeDirectXBuffers(DirectXDrawingPipeline pipeline, DModel model)
         {
             try
             {
@@ -496,16 +501,16 @@ namespace WindCalculator.ViewModel
                 Device device = ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.D3D.Device;
 
                 // Set number of vertices in the vertex array.
-                ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model.VertexCount = vertices.Length;
+                model.VertexCount = vertices.Length;
 
                 // Set number of vertices in the index array.
-                ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model.IndexCount = indicies.Length;
+                model.IndexCount = indicies.Length;
 
                 // Create the vertex buffer.
-                ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model.VertexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.VertexBuffer, vertices);
+                model.VertexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.VertexBuffer, vertices);
 
                 // Create the index buffer.
-                ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model.IndexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.IndexBuffer, indicies, ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model.IndexCount * sizeof(int));
+                model.IndexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.IndexBuffer, indicies, model.IndexCount * sizeof(int));
 
                 // Delete arrays now that they are in their respective vertex and index buffers.
                 vertices = null;
@@ -515,6 +520,8 @@ namespace WindCalculator.ViewModel
             {
                 throw new InvalidOperationException("Error in Rendering DirectX of the BuildingViewModel");
             }
+
+            return model;
         }
     }
 
