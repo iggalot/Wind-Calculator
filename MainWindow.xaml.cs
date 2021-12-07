@@ -2,6 +2,7 @@
 using DrawingHelpersLibrary;
 using DrawingPipeline;
 using DrawingPipeline.DirectX;
+using DrawingPipelineLibrary.DirectX;
 using System;
 using System.ComponentModel;
 using System.Numerics;
@@ -456,22 +457,43 @@ namespace WindCalculator
 
         private void CreateModel1()
         {
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.Model = new DrawingPipelineLibrary.DirectX.DModel();
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.Model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device);
-
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.ModelList.Clear();
+            DModel model = new DModel();
+            model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device);
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
         }
 
         private void CreateModel2()
         {
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.Model = new DrawingPipelineLibrary.DirectX.DModel();
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.Model.InitializeBuffer(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device);
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.ModelList.Clear();
 
-            
+            DModel model = new DModel();
+            model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device);
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
+
+            model = new DModel();
+            model.InitializeBuffer(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device);
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
+
         }
 
         private void CreateModel3()
         {
-            BuildingVM.Render(true, Pipeline);
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.ModelList.Clear();
+            
+            DModel model = new DModel();            
+            model = BuildingVM.CreateModel(((DirectXDrawingPipeline)Pipeline));
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
+
+            model = new DModel();
+            model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device);
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
+
+            model = new DModel();
+            model.InitializeBuffer(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device);
+            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
+
+            //BuildingVM.Render(true, Pipeline);
         }
 
         private void Model2_Click(object sender, RoutedEventArgs e)
