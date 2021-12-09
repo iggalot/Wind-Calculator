@@ -29,7 +29,13 @@ namespace WindCalculator
         // Stores the last mouse point
         private Vector4 lastMousePoint { get; set; } = new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
 
+        // Upper left corner of the UI window in pixels.
+        public Point UIInsertPoint { get; set; } = new Point(0, 0);
+        public static float UIWindowWidth { get; set; } = 800.0f;
+        public static float UIWindowHeight { get; set; } = 800.0f;
 
+        public static float DisplayWindowWidth { get; set; } = 600.0f;
+        public static float DisplayWindowHeight { get; set; } = 600.0f;
         // Gridline model object
         public Gridlines GridlineModel { get; set; } = new Gridlines();
 
@@ -236,7 +242,7 @@ namespace WindCalculator
             WriteToConsole("Initializing DirectX...");
 
             // Create the drawing pipeline to be used
-            Pipeline = new DirectXDrawingPipeline();
+            Pipeline = new DirectXDrawingPipeline((int)DisplayWindowWidth, (int)DisplayWindowHeight);
 
             
 
@@ -262,7 +268,9 @@ namespace WindCalculator
         {
             WriteToConsole("Initializing WPF Graphics...");
 
-            Pipeline = new CanvasDrawingPipeline(MainCanvas);
+            Pipeline = new CanvasDrawingPipeline(MainCanvas, (int)(DisplayWindowWidth + UIWindowWidth), (int)(DisplayWindowHeight + UIWindowHeight));
+            MainCanvas.Width = DisplayWindowWidth;
+            MainCanvas.Height = DisplayWindowHeight;
 
             while (!AppShouldShutdown)
             {
