@@ -379,9 +379,8 @@ namespace WindCalculator
             double SCALE_FACTOR = Math.Min(SCALE_FACTOR_HORIZ, SCALE_FACTOR_VERT);
 
             // create our camera object
-            Camera camera = new Camera(canvas, (float)0, 0, -200, 0, 1, 0, 90, 0);
     
-            BuildingViewModel bldg_vm = new BuildingViewModel(canvas, camera, bldg, SCALE_FACTOR, orient);
+            BuildingViewModel bldg_vm = new BuildingViewModel(canvas, bldg, SCALE_FACTOR, orient);
             PressureViewModel pressure_vm = new PressureViewModel(canvas, wind_prov, bldg_vm, title, orient, wind_case);
 
             return new WindViewModel(canvas, bldg_vm, pressure_vm, wind_prov, orient, wind_case);

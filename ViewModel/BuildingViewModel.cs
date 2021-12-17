@@ -15,8 +15,6 @@ namespace WindCalculator.ViewModel
     public class BuildingViewModel
     {
         public BuildingModel BldgModel { get; set; }
-        // Our camera object for this view model
-        public Camera CameraObj { get; set; }
         public BuildingInfo Model { get; set; }
         public Canvas DrawingCanvas { get; set; }
 
@@ -81,12 +79,11 @@ namespace WindCalculator.ViewModel
         {
             BldgModel = model;
         }
-        public BuildingViewModel(Canvas canvas, Camera camera, BuildingInfo bldg, double drawing_scale_factor, WindOrientations orient)
+        public BuildingViewModel(Canvas canvas, BuildingInfo bldg, double drawing_scale_factor, WindOrientations orient)
         {
             Model = bldg;
             SCALE_FACTOR = drawing_scale_factor;
             WindOrient = orient;
-            CameraObj = camera;
             DrawingCanvas = canvas;
 
             //CameraObj = new Camera(0, 0, 150.0f, 0, 1, 0, 90, 0);
@@ -127,59 +124,58 @@ namespace WindCalculator.ViewModel
             BuildingInfo bldg = Model;
             Canvas canvas = DrawingCanvas;
 
-            UCS_X_START_SC = Camera.WorldToScreen(bldg.UCS_X_START, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            UCS_Y_START_SC = Camera.WorldToScreen(bldg.UCS_Y_START, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            UCS_Z_START_SC = Camera.WorldToScreen(bldg.UCS_Z_START, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            UCS_X_END_SC = Camera.WorldToScreen(bldg.UCS_X_END, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            UCS_Y_END_SC = Camera.WorldToScreen(bldg.UCS_Y_END, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            UCS_Z_END_SC = Camera.WorldToScreen(bldg.UCS_Z_END, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //UCS_X_START_SC = Camera.WorldToScreen(bldg.UCS_X_START, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //UCS_Y_START_SC = Camera.WorldToScreen(bldg.UCS_Y_START, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //UCS_Z_START_SC = Camera.WorldToScreen(bldg.UCS_Z_START, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //UCS_X_END_SC = Camera.WorldToScreen(bldg.UCS_X_END, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //UCS_Y_END_SC = Camera.WorldToScreen(bldg.UCS_Y_END, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //UCS_Z_END_SC = Camera.WorldToScreen(bldg.UCS_Z_END, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
 
 
-            ORIGIN_1_SC = Camera.WorldToScreen(bldg.ORIGIN_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            WW_GRD_1_SC = Camera.WorldToScreen(bldg.WW_GRD_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            WW_15_1_SC = Camera.WorldToScreen(bldg.WW_15_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            WW_H_1_SC = Camera.WorldToScreen(bldg.WW_H_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            LW_GRD_1_SC = Camera.WorldToScreen(bldg.LW_GRD_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            LW_15_1_SC = Camera.WorldToScreen(bldg.LW_15_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            LW_H_1_SC = Camera.WorldToScreen(bldg.LW_H_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            RIDGE_1_SC = Camera.WorldToScreen(bldg.RIDGE_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //ORIGIN_1_SC = Camera.WorldToScreen(bldg.ORIGIN_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //WW_GRD_1_SC = Camera.WorldToScreen(bldg.WW_GRD_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //WW_15_1_SC = Camera.WorldToScreen(bldg.WW_15_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //WW_H_1_SC = Camera.WorldToScreen(bldg.WW_H_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //LW_GRD_1_SC = Camera.WorldToScreen(bldg.LW_GRD_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //LW_15_1_SC = Camera.WorldToScreen(bldg.LW_15_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //LW_H_1_SC = Camera.WorldToScreen(bldg.LW_H_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //RIDGE_1_SC = Camera.WorldToScreen(bldg.RIDGE_1, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
 
-            //CameraObj.ModelMatrix = CameraObj.ModelMatrix.Translate(new Vector3(30, 30, 0));
+            ////CameraObj.ModelMatrix = CameraObj.ModelMatrix.Translate(new Vector3(30, 30, 0));
 
-            ORIGIN_2_SC = Camera.WorldToScreen(bldg.ORIGIN_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            WW_GRD_2_SC = Camera.WorldToScreen(bldg.WW_GRD_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            WW_15_2_SC = Camera.WorldToScreen(bldg.WW_15_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            WW_H_2_SC = Camera.WorldToScreen(bldg.WW_H_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            LW_GRD_2_SC = Camera.WorldToScreen(bldg.LW_GRD_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            LW_15_2_SC = Camera.WorldToScreen(bldg.LW_15_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            LW_H_2_SC = Camera.WorldToScreen(bldg.LW_H_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            RIDGE_2_SC = Camera.WorldToScreen(bldg.RIDGE_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //ORIGIN_2_SC = Camera.WorldToScreen(bldg.ORIGIN_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //WW_GRD_2_SC = Camera.WorldToScreen(bldg.WW_GRD_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //WW_15_2_SC = Camera.WorldToScreen(bldg.WW_15_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //WW_H_2_SC = Camera.WorldToScreen(bldg.WW_H_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //LW_GRD_2_SC = Camera.WorldToScreen(bldg.LW_GRD_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //LW_15_2_SC = Camera.WorldToScreen(bldg.LW_15_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //LW_H_2_SC = Camera.WorldToScreen(bldg.LW_H_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //RIDGE_2_SC = Camera.WorldToScreen(bldg.RIDGE_2, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
 
-            RoofProfile_1_SC = new Vector4[bldg.RoofProfile_1.Length];
-            RoofProfile_2_SC = new Vector4[bldg.RoofProfile_2.Length];
+            //RoofProfile_1_SC = new Vector4[bldg.RoofProfile_1.Length];
+            //RoofProfile_2_SC = new Vector4[bldg.RoofProfile_2.Length];
 
-            // Get the roof profile screen coordsDraw the Roof object line
-            for (int i = 0; i < bldg.RoofProfile_1.Length; i++)
-            {
-                RoofProfile_1_SC[i] = Camera.WorldToScreen(bldg.RoofProfile_1[i], CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-                RoofProfile_2_SC[i] = Camera.WorldToScreen(bldg.RoofProfile_2[i], CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            }
-
-            //// Create the screen coordinates for the pressure zone points
-            //int count = 0;
-            //RoofZonePoints_1_SC = new Vector4[bldg.RoofZonePts_1.Length];
-            //RoofZonePoints_2_SC = new Vector4[bldg.RoofZonePts_2.Length];
-
-            //for (int i = 0; i < bldg.RoofZonePts_1.Length; i++)
+            //// Get the roof profile screen coordsDraw the Roof object line
+            //for (int i = 0; i < bldg.RoofProfile_1.Length; i++)
             //{
-            //    RoofZonePoints_1_SC[i] = Camera.WorldToScreen(bldg.RoofZonePts_1[i], CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
-            //    RoofZonePoints_2_SC[i] = Camera.WorldToScreen(bldg.RoofZonePts_2[i], CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //    RoofProfile_1_SC[i] = Camera.WorldToScreen(bldg.RoofProfile_1[i], CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            //    RoofProfile_2_SC[i] = Camera.WorldToScreen(bldg.RoofProfile_2[i], CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
             //}
+
+            ////// Create the screen coordinates for the pressure zone points
+            ////int count = 0;
+            ////RoofZonePoints_1_SC = new Vector4[bldg.RoofZonePts_1.Length];
+            ////RoofZonePoints_2_SC = new Vector4[bldg.RoofZonePts_2.Length];
+
+            ////for (int i = 0; i < bldg.RoofZonePts_1.Length; i++)
+            ////{
+            ////    RoofZonePoints_1_SC[i] = Camera.WorldToScreen(bldg.RoofZonePts_1[i], CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            ////    RoofZonePoints_2_SC[i] = Camera.WorldToScreen(bldg.RoofZonePts_2[i], CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
+            ////}
         }
 
         public void Update()
         {
-            CameraObj.Update();
             UpdateScreenCoords();
             
         }
@@ -323,70 +319,12 @@ namespace WindCalculator.ViewModel
 
                 DrawingHelpers.DrawLine(DrawingCanvas, r_pt1.X, r_pt1.Y, r_pt2.X, r_pt2.Y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID);
             }
-
-            //if (WindOrient == WindOrientations.WIND_ORIENTATION_NORMALTORIDGE)
-            //{
-
-            //} else
-            //{
-
-            //}
-
-
-
-
-
-
-            string dim_str;
-
-            //// Draw building dimensions
-            //// Horizontal Building Dimension
-            //// TODO:: Plot this dimension below the grade line
-            //dim_str = (Math.Round(Model.L * 100.0) / 100.0).ToString() + "'";
-            //DrawingHelpers.DrawDimensionAligned(canvas, WW_GRD_1_SC.X, WW_GRD_1_SC.Y, LW_GRD_1_SC.X, LW_GRD_1_SC.Y, dim_str, dim_text_ht);
-
-            //// LW wall
-            //dim_str = (Math.Abs(Math.Round(((Model.LW_GRD_1.Y - Model.LW_H_1.Y)) * 100.0) / 100.0)).ToString() + "'";
-            //DrawingHelpers.DrawDimensionAligned(canvas, LW_H_1_SC.X, LW_H_1_SC.Y, LW_GRD_1_SC.X, LW_GRD_1_SC.Y, dim_str, dim_text_ht);
-
-            //// WW wall
-            //dim_str = (Math.Abs(Math.Round(((Model.WW_GRD_1.Y - Model.WW_H_1.Y)) * 100.0) / 100.0)).ToString() + "'";
-            //DrawingHelpers.DrawDimensionAligned(canvas, WW_GRD_1_SC.X, WW_GRD_1_SC.Y, WW_H_1_SC.X, WW_H_1_SC.Y, dim_str, dim_text_ht);
-
-            // TODO::  Draw connector lines between Frame 1 and Frame 2
-
-
-            // Dimension the Ridge Point if it isn't a flat roof or parallel to ridge
-            //if (Model.RoofSlopeType != RoofSlopeTypes.ROOF_SLOPE_FLAT && WindOrient == WindOrientations.WIND_ORIENTATION_NORMALTORIDGE)
-            //{
-            //    // Vertical to Ridge
-            //    dim_str = (Math.Abs(Math.Round(((Model.ORIGIN_1.Y - Model.RIDGE_1.Y)) * 100.0) / 100.0)).ToString() + "'";
-            //    DrawingHelpers.DrawDimensionAligned(canvas, RIDGE_1_SC.X, ORIGIN_1_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht);
-            //    // Horizontal to Ridge from WW
-            //    dim_str = (Math.Abs(Math.Round((Model.RIDGE_1.X - Model.WW_H_1.X) * 100.0) / 100.0)).ToString() + "'";
-            //    DrawingHelpers.DrawDimensionAligned(canvas, WW_H_1_SC.X, RIDGE_1_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht);
-
-            //    // Horizontal to Ridge from LW
-            //    dim_str = (Math.Abs(Math.Round((Model.LW_H_1.X - Model.RIDGE_1.X) * 100.0) / 100.0)).ToString() + "'";
-            //    DrawingHelpers.DrawDimensionAligned(canvas, LW_H_1_SC.X, RIDGE_1_SC.Y, RIDGE_1_SC.X, RIDGE_1_SC.Y, dim_str, dim_text_ht); ;
-            //}
-
         }
 
         public DModel CreateModel(DirectXDrawingPipeline pipeline, ModelElementTypes element_type)
         {
             DModel model = new DModel();
             return InitializeDirectXBuffers(pipeline, model, element_type);
-        }
-        public void Render(bool use_directX, BaseDrawingPipeline pipeline)
-        {
-            //if(use_directX)
-            //{
-            //    ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model = new DrawingPipelineLibrary.DirectX.DModel();
-            //    RenderDirectX((DirectXDrawingPipeline)pipeline);
-            //    //((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.Model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.D3D.Device);
-
-            //}
         }
 
         /// <summary>
