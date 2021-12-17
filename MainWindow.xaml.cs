@@ -5,6 +5,7 @@ using DrawingPipeline.DirectX;
 using DrawingPipelineLibrary.DirectX;
 using SharpDX.Direct3D11;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Numerics;
 using System.Threading;
@@ -12,6 +13,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using WindCalculator.Model;
 using WindCalculator.ViewModel;
 
@@ -22,12 +24,10 @@ namespace WindCalculator
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static bool bAppNeedsUpdate = false;
-        //public const double PRESSURE_TEXT_HT = 10;
-        //public const double STRUCTURE_DIM_TEXT_HT = 20;
+        // Flag to desginate whether directXX drawing should be used or more simple WPF canvas drawing
+        public bool bIsDirectXEnabled { get; set; } = true;
 
-        // Stores the last mouse point
-        private Vector4 lastMousePoint { get; set; } = new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+        private static bool bAppNeedsUpdate = false;
 
         // Upper left corner of the UI window in pixels.
         public Point UIInsertPoint { get; set; } = new Point(0, 0);
@@ -36,6 +36,7 @@ namespace WindCalculator
 
         public static float DisplayWindowWidth { get; set; } = 600.0f;
         public static float DisplayWindowHeight { get; set; } = 600.0f;
+
         // Gridline model object
         public Gridlines GridlineModel { get; set; } = new Gridlines();
 
@@ -68,6 +69,19 @@ namespace WindCalculator
             }
         }
 
+        public string GetStatusBarString { 
+            get {
+                string str = "";
+                if (bIsDirectXEnabled)
+                    str += "Graphics Mode: DirectX 11";
+                else
+                    str += "Graphics Mode: WPF Canvas";
+
+                str += "-- " + PipelineList.Count + " drawing pipelines active.";
+                return str;
+            } 
+        }
+
         internal void ChangeAppNeedsUpdateStatus(bool value)
         {
             // if nothing changed, no need to do anything.
@@ -97,16 +111,14 @@ namespace WindCalculator
 
         }
 
-        public int GaphicsRefreshTimer { get; set; } = 100;  // milliseconds between refresh checks
+        public int GraphicsRefreshTimer { get; set; } = 100;  // milliseconds between refresh checks
         public int ModelRefreshTimer { get; set; } = 100;  // milliseconds between model update checks
         public int UIRefreshTimer { get; set; } = 100;  // milliseconds between UI update checks
         public int AppUpdateTimer { get; set; } = 200; // milliseconds between application update
 
-        // Flag to desginate whether directXX drawing should be used or more simple WPF canvas drawing
-        public bool bIsDirectXEnabled { get; set; } = true;
 
         // The pipeline to use for rendering graphics.
-        public BaseDrawingPipeline Pipeline { get; set; }
+        public List<BaseDrawingPipeline> PipelineList { get; set; } = new List<BaseDrawingPipeline>();
         public BuildingViewModel BuildingVM { get; set; }
 
         public MainWindow()
@@ -135,6 +147,7 @@ namespace WindCalculator
                 ThreadGraphics = new Thread(InitializeWPFGraphicsThread);
                 ThreadGraphics.Name = "WPF Graphics thread";
             }
+            ThreadGraphics.SetApartmentState(ApartmentState.STA);
 
             ThreadUI = new Thread(InitializeUIThread);
             ThreadUI.Name = "Application UI Thread";
@@ -239,20 +252,24 @@ namespace WindCalculator
         /// </summary>
         private void InitializeDirectXGraphicsThread()
         {
-            WriteToConsole("Initializing DirectX...");
+            WriteToConsole("Initializing DirectX Graphics...");
 
             // Create the drawing pipeline to be used
-            Pipeline = new DirectXDrawingPipeline((int)DisplayWindowWidth, (int)DisplayWindowHeight);
+            PipelineList.Add(new DirectXDrawingPipeline((int)DisplayWindowWidth, (int)DisplayWindowHeight, (int)GraphicsRefreshTimer));
 
-            
-
-            Pipeline.RunPipeline();
             // Primary render loop
             while (!AppShouldShutdown)
             {
-                // if the App needs Updating, lock the mutex and perform updating.
-                while(AppNeedsUpdate)
+                // TODO:  If we have multiple windows, do we need multiple threads here?  This currently only runs the first one in the list as it gets caught in RenderLoop
+                foreach (var item in PipelineList)
                 {
+                    item.Run();
+                }
+
+                // if the App needs Updating, lock the mutex and perform updating.
+                while (AppNeedsUpdate)
+                {
+
                     //                    Pipeline.Update();
                     //WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to FALSE.");
                     AppNeedsUpdate = false;
@@ -260,22 +277,41 @@ namespace WindCalculator
                     continue;
                 }
 
-                Thread.Sleep(GaphicsRefreshTimer);
+                Thread.Sleep(GraphicsRefreshTimer);
             }
         }
 
-        private void InitializeWPFGraphicsThread()
+        private async void InitializeWPFGraphicsThread()
         {
             WriteToConsole("Initializing WPF Graphics...");
 
-            Pipeline = new CanvasDrawingPipeline(MainCanvas, (int)(DisplayWindowWidth + UIWindowWidth), (int)(DisplayWindowHeight + UIWindowHeight));
-            MainCanvas.Width = DisplayWindowWidth;
-            MainCanvas.Height = DisplayWindowHeight;
+            // Set the MainCanvas dimensions.
+            await Dispatcher.BeginInvoke(new Action(() =>
+            {
+                MainCanvas.Width = DisplayWindowWidth;
+                MainCanvas.Height = DisplayWindowHeight;
+
+                // Create the pipeline for drawing to our MainCanvas object.
+                PipelineList.Add(new CanvasDrawingPipeline(MainCanvas, (int)MainCanvas.Width, (int)MainCanvas.Width, GraphicsRefreshTimer));
+                PipelineList.Add(new CanvasDrawingPipeline(Canvas3, (int)200, (int)200, GraphicsRefreshTimer));
+
+            }), DispatcherPriority.Normal);
 
             while (!AppShouldShutdown)
             {
+                // Each Canvas in the window has its own pipeline
+                foreach (var item in PipelineList)
+                {
+                    // TODO:  How to make application gracefully shutdown
+                    Application.Current.Dispatcher.Invoke(new Action(() =>
+                    {
+                        item.Run();
+                    })); 
+                }
+
                 while (AppNeedsUpdate)
                 {
+
                     //Pipeline.Update();
                     //WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to FALSE.");
                     AppNeedsUpdate = false;
@@ -283,7 +319,7 @@ namespace WindCalculator
                     continue;
                 }
 
-                Thread.Sleep(GaphicsRefreshTimer);
+                Thread.Sleep(GraphicsRefreshTimer);
             }
         }
 
@@ -427,7 +463,7 @@ namespace WindCalculator
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
             // Send the keystroke to the pipeline for processing
-            Pipeline.SetKeyState(e.Key, true);
+            PipelineList[0].SetKeyState(e.Key, true);
         }
 
         private void MainCanvas_MouseMove(object sender, MouseEventArgs e)
@@ -473,60 +509,70 @@ namespace WindCalculator
 
         private void CreateModel1()
         {
-            // Clear the models
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.ModelList.Clear();
+            if (bIsDirectXEnabled)
+            {
+                // Clear the models
+                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.ModelList.Clear();
 
-            // Create the gridlines
-            GridlineModel = new Gridlines();
-            GridlineModel.CreateModel((DirectXDrawingPipeline)Pipeline);
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(GridlineModel.Model);
+                // Create the gridlines
+                GridlineModel = new Gridlines();
+                GridlineModel.CreateModel((DirectXDrawingPipeline)PipelineList[0]);
+                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(GridlineModel.Model);
 
-            DModel model = new DModel();
-            model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_TRIANGLE);
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
+                DModel model = new DModel();
+                model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_TRIANGLE);
+                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
+            }
+
         }
 
         private void CreateModel2()
         {
-            // Clear the models
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.ModelList.Clear();
+            if (bIsDirectXEnabled)
+            {
+                // Clear the models
+                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.ModelList.Clear();
 
-            // Create the gridlines
-            GridlineModel = new Gridlines();
-            GridlineModel.CreateModel((DirectXDrawingPipeline)Pipeline);
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(GridlineModel.Model);
+                // Create the gridlines
+                GridlineModel = new Gridlines();
+                GridlineModel.CreateModel((DirectXDrawingPipeline)PipelineList[0]);
+                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(GridlineModel.Model);
 
-            DModel model = new DModel();
-            model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
+                DModel model = new DModel();
+                model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
+                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
 
-            model = new DModel();
-            model.InitializeBuffer(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
+                model = new DModel();
+                model.InitializeBuffer(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
+                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
+            }
 
         }
 
         private void CreateModel3()
         {
-            // Clear the models
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.ModelList.Clear();
+            if (bIsDirectXEnabled)
+            {
+                // Clear the models
+                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.ModelList.Clear();
 
-            // Create the gridlines
-            GridlineModel = new Gridlines();
-            GridlineModel.CreateModel((DirectXDrawingPipeline)Pipeline);
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(GridlineModel.Model);
+                // Create the gridlines
+                GridlineModel = new Gridlines();
+                GridlineModel.CreateModel((DirectXDrawingPipeline)PipelineList[0]);
+                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(GridlineModel.Model);
 
-            DModel model = new DModel();
-            model = BuildingVM.CreateModel((DirectXDrawingPipeline)Pipeline, ModelElementTypes.MODEL_ELEMENT_TRIANGLE);
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
+                DModel model = new DModel();
+                model = BuildingVM.CreateModel((DirectXDrawingPipeline)PipelineList[0], ModelElementTypes.MODEL_ELEMENT_TRIANGLE);
+                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
 
-            model = new DModel();
-            model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
+                model = new DModel();
+                model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
+                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
 
-            model = new DModel();
-            model.InitializeBuffer(((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
-            ((DirectXDrawingPipeline)Pipeline).GetDSystem.Graphics.AddModel(model);
+                model = new DModel();
+                model.InitializeBuffer(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
+                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
+            }
 
             //BuildingVM.Render(true, Pipeline);
         }
