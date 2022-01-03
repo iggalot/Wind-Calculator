@@ -1,4 +1,5 @@
-﻿using DrawingPipeline.DirectX;
+﻿using DrawingPipeline;
+using DrawingPipeline.DirectX;
 using DrawingPipelineLibrary.DirectX;
 using SharpDX.Direct3D11;
 using System;
@@ -70,59 +71,89 @@ namespace WindCalculator.Model
             GridlineList[23] = new SharpDX.Vector4(-x_off, y_off, 0, 1);
         }
 
-        public DModel CreateModel(DirectXDrawingPipeline pipeline )
+
+        public DModel CreateModel(BaseDrawingPipeline pipeline)
         {
             Model = new DModel();
-            Device device = pipeline.GetDSystem.Graphics.D3D.Device;
 
-            // model.InitializeBufferTestTriangle(device, ModelElementTypes.MODEL_ELEMENT_TRIANGLE);
-
-            SharpDX.Vector4 line_color = new SharpDX.Vector4(1, 1, 1, 1);
             try
             {
+                Model.ModelElementType = ModelElementTypes.MODEL_ELEMENT_LINE;
+
                 // Set number of vertices in the vertex array.
                 Model.VertexCount = GridlineList.Length;
                 // Set number of vertices in the index array.
                 Model.IndexCount = GridlineList.Length;
 
-                // Create the vertex array and load it with data.
-                DColorShader.DVertex[] vertices = new DColorShader.DVertex[numLines * 2];
-
-                for (int i = 0; i < GridlineList.Length; i++)
+                if (pipeline.GetType() == typeof(DirectXDrawingPipeline))
                 {
-                    vertices[i] = new DColorShader.DVertex()
-                    {
-                        position = new SharpDX.Vector3(GridlineList[i].X, GridlineList[i].Y, GridlineList[i].Z),
-                        color = line_color
-                    };
+                    CreateDirectXModel((DirectXDrawingPipeline)pipeline);
                 }
-
-                // Create Indicies for the IndexBuffer.
-                int[] indicies = new int[numLines * 2];
-
-                for (int i = 0; i < GridlineList.Length; i++)
+                else if (pipeline.GetType() == typeof(CanvasDrawingPipeline))
                 {
-                    indicies[i] = i;
+                    CreateWPFModel((CanvasDrawingPipeline)pipeline);
                 }
-
-                // Create the vertex buffer.
-                Model.VertexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.VertexBuffer, vertices);
-
-                // Create the index buffer.
-                Model.IndexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.IndexBuffer, indicies);
-
-                Model.ModelElementType = ModelElementTypes.MODEL_ELEMENT_LINE;
-
-                // Delete arrays now that they are in their respective vertex and index buffers.
-                vertices = null;
-                indicies = null;
-
+                else
+                {
+                    throw new NotImplementedException("In Gridlines.CreateModel(): invalid pipeline type received");
+                }
             }
             catch
             {
+                throw new NotImplementedException("In Gridlines.CreateModel(): error creating Model");
             }
-            return Model;
 
+            return Model;
+        }
+
+        private void CreateWPFModel(CanvasDrawingPipeline pipeline)
+        {
+                // Create WPF specific stuff here.
+
+        }
+
+        /// <summary>
+        /// Creates the DirectX Pipeline object for grid lines
+        /// </summary>
+        /// <param name="pipeline"></param>
+        /// <returns></returns>
+        public void CreateDirectXModel(DirectXDrawingPipeline pipeline )
+        {
+            Device device = pipeline.GetDSystem.Graphics.D3D.Device;
+
+            // model.InitializeBufferTestTriangle(device, ModelElementTypes.MODEL_ELEMENT_TRIANGLE);
+
+            SharpDX.Vector4 line_color = new SharpDX.Vector4(1, 1, 1, 1);
+
+            // Create the vertex array and load it with data.
+            DColorShader.DVertex[] vertices = new DColorShader.DVertex[numLines * 2];
+
+            for (int i = 0; i < GridlineList.Length; i++)
+            {
+                vertices[i] = new DColorShader.DVertex()
+                {
+                    position = new SharpDX.Vector3(GridlineList[i].X, GridlineList[i].Y, GridlineList[i].Z),
+                    color = line_color
+                };
+            }
+
+            // Create Indicies for the IndexBuffer.
+            int[] indicies = new int[numLines * 2];
+
+            for (int i = 0; i < GridlineList.Length; i++)
+            {
+                indicies[i] = i;
+            }
+
+            // Create the vertex buffer.
+            Model.VertexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.VertexBuffer, vertices);
+
+            // Create the index buffer.
+            Model.IndexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.IndexBuffer, indicies);
+
+            // Delete arrays now that they are in their respective vertex and index buffers.
+            vertices = null;
+            indicies = null;
         }
     }
 }

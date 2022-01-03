@@ -293,6 +293,8 @@ namespace WindCalculator
 
                 // Create the pipeline for drawing to our MainCanvas object.
                 PipelineList.Add(new CanvasDrawingPipeline(MainCanvas, (int)MainCanvas.Width, (int)MainCanvas.Width, GraphicsRefreshTimer));
+
+                // Create the pipeline for drawing to our Canvas3 object.
                 PipelineList.Add(new CanvasDrawingPipeline(Canvas3, (int)200, (int)200, GraphicsRefreshTimer));
 
             }), DispatcherPriority.Normal);
@@ -509,35 +511,41 @@ namespace WindCalculator
 
         private void CreateModel1()
         {
+            PipelineList[0].GetDSystem.Graphics.ModelList.Clear();
+
+            // Create the gridlines
+            GridlineModel = new Gridlines();
+
+            // Create the model for the grid lines
+            GridlineModel.CreateModel(PipelineList[0]);
+            PipelineList[0].GetDSystem.Graphics.AddModel(GridlineModel.Model);
+
             if (bIsDirectXEnabled)
             {
-                // Clear the models
-                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.ModelList.Clear();
 
-                // Create the gridlines
-                GridlineModel = new Gridlines();
-                GridlineModel.CreateModel((DirectXDrawingPipeline)PipelineList[0]);
-                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(GridlineModel.Model);
 
                 DModel model = new DModel();
                 model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_TRIANGLE);
                 ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
+            } else
+            {
+                // TODO: COMPLETE WPF IMPLEMENTATION FOR GRIDLINES
             }
-
         }
 
         private void CreateModel2()
         {
+            PipelineList[0].GetDSystem.Graphics.ModelList.Clear();
+
+            // Create the gridlines
+            GridlineModel = new Gridlines();
+
+            // Create the model for the grid lines
+            GridlineModel.CreateModel(PipelineList[0]);
+            PipelineList[0].GetDSystem.Graphics.AddModel(GridlineModel.Model);
+
             if (bIsDirectXEnabled)
             {
-                // Clear the models
-                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.ModelList.Clear();
-
-                // Create the gridlines
-                GridlineModel = new Gridlines();
-                GridlineModel.CreateModel((DirectXDrawingPipeline)PipelineList[0]);
-                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(GridlineModel.Model);
-
                 DModel model = new DModel();
                 model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
                 ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
@@ -546,21 +554,26 @@ namespace WindCalculator
                 model.InitializeBuffer(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
                 ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
             }
+            else
+            {
+                // TODO: COMPLETE WPF IMPLEMENTATION FOR GRIDLINES
+            }
 
         }
 
         private void CreateModel3()
         {
+            PipelineList[0].GetDSystem.Graphics.ModelList.Clear();
+
+            // Create the gridlines
+            GridlineModel = new Gridlines();
+
+            // Create the model for the grid lines
+            GridlineModel.CreateModel(PipelineList[0]);
+            PipelineList[0].GetDSystem.Graphics.AddModel(GridlineModel.Model);
+
             if (bIsDirectXEnabled)
             {
-                // Clear the models
-                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.ModelList.Clear();
-
-                // Create the gridlines
-                GridlineModel = new Gridlines();
-                GridlineModel.CreateModel((DirectXDrawingPipeline)PipelineList[0]);
-                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(GridlineModel.Model);
-
                 DModel model = new DModel();
                 model = BuildingVM.CreateModel((DirectXDrawingPipeline)PipelineList[0], ModelElementTypes.MODEL_ELEMENT_TRIANGLE);
                 ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
@@ -572,6 +585,10 @@ namespace WindCalculator
                 model = new DModel();
                 model.InitializeBuffer(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
                 ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
+            }
+            else
+            {
+                // TODO: COMPLETE WPF IMPLEMENTATION FOR GRIDLINES
             }
 
             //BuildingVM.Render(true, Pipeline);
