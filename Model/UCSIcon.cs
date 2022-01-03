@@ -94,10 +94,10 @@ namespace WindCalculator.Model
             for (int i = 0; i < UCSlineList.Length; i++)
             {
                 SharpDX.Vector4 line_color;
-                if(i / 2 == 1)
+                if(i / 2 == 0)
                 {
                     line_color = line_color_red;
-                } else if (i / 2 == 2)
+                } else if (i / 2 == 1)
                 {
                     line_color = line_color_green;
                 } else
