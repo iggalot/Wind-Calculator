@@ -367,15 +367,15 @@ namespace WindCalculator
             BuildingModel bldg1 = new BuildingModel(l, b, wall_ht);
             BuildingVM = new BuildingViewModel(bldg1);
 
-            // Frame 1
-            Vector4 ww_wall_1 = new Vector4(0.0f, (float)wall_ht, 0, 1.0f);
-            Vector4 lw_wall_1 = new Vector4(100.0f, (float)wall_ht, 0, 1.0f);
-            Vector4 ridge_1 = new Vector4(50.0f, (float)(wall_ht + 50.0f), 0, 1.0f);
+            //// Frame 1
+            //Vector4 ww_wall_1 = new Vector4(0.0f, (float)wall_ht, 0, 1.0f);
+            //Vector4 lw_wall_1 = new Vector4(100.0f, (float)wall_ht, 0, 1.0f);
+            //Vector4 ridge_1 = new Vector4(50.0f, (float)(wall_ht + 50.0f), 0, 1.0f);
 
-            // Frame 2
-            Vector4 ww_wall_2 = new Vector4(0.0f, (float)wall_ht, (float)b, 1.0f);
-            Vector4 lw_wall_2 = new Vector4(100.0f, (float)wall_ht, (float)b, 1.0f);
-            Vector4 ridge_2 = new Vector4(50.0f, (float)(wall_ht + 50.0f), (float)b, 1.0f);
+            //// Frame 2
+            //Vector4 ww_wall_2 = new Vector4(0.0f, (float)wall_ht, (float)b, 1.0f);
+            //Vector4 lw_wall_2 = new Vector4(100.0f, (float)wall_ht, (float)b, 1.0f);
+            //Vector4 ridge_2 = new Vector4(50.0f, (float)(wall_ht + 50.0f), (float)b, 1.0f);
 
             // Profile of the roof line
             // TODO:: Need to sort the order of these points or provide some sort of logic (left-to-right) progression of points
@@ -384,23 +384,23 @@ namespace WindCalculator
             //Vector4[] profile_east_1 = new Vector4[] { ww_wall_1, ridge_1, lw_wall_1 };
             //Vector4[] profile_east_2 = new Vector4[] { ww_wall_2, ridge_2, lw_wall_2 };
 
-            // TESTING: Flat roof profile
-            Vector4[] profile_east_1 = new Vector4[] { ww_wall_1, lw_wall_1 };
-            Vector4[] profile_east_2 = new Vector4[] { ww_wall_2, lw_wall_2 };
+            //// TESTING: Flat roof profile
+            //Vector4[] profile_east_1 = new Vector4[] { ww_wall_1, lw_wall_1 };
+            //Vector4[] profile_east_2 = new Vector4[] { ww_wall_2, lw_wall_2 };
 
-            Vector4[] profile_north_1 = new Vector4[] { ww_wall_1, ww_wall_2 };
-            Vector4[] profile_north_2 = new Vector4[] { lw_wall_1, lw_wall_2 };
+            //Vector4[] profile_north_1 = new Vector4[] { ww_wall_1, ww_wall_2 };
+            //Vector4[] profile_north_2 = new Vector4[] { lw_wall_1, lw_wall_2 };
 
             //BuildingInfo bldg_East = new SlopedRoofBuildingInfo(profile_east_1, profile_east_2, RoofSlopeTypes.ROOF_SLOPE_SINGLERIDGE, risk_cat);
             //BuildingInfo bldg_North = new SlopedRoofBuildingInfo(profile_north_1, profile_north_2, RoofSlopeTypes.ROOF_SLOPE_FLAT, risk_cat);
 
-            ////TESTING: flat roof profile
-            BuildingInfo bldg_East = new BuildingInfo(profile_east_1, profile_east_2, RoofSlopeTypes.ROOF_SLOPE_FLAT, risk_cat, WindOrientations.WIND_ORIENTATION_NORMALTORIDGE);
-            BuildingInfo bldg_North = new BuildingInfo(profile_north_1, profile_north_2, RoofSlopeTypes.ROOF_SLOPE_FLAT, risk_cat, WindOrientations.WIND_ORIENTATION_PARALLELTORIDGE);
+            //////TESTING: flat roof profile
+            //BuildingInfo bldg_East = new BuildingInfo(profile_east_1, profile_east_2, RoofSlopeTypes.ROOF_SLOPE_FLAT, risk_cat, WindOrientations.WIND_ORIENTATION_NORMALTORIDGE);
+            //BuildingInfo bldg_North = new BuildingInfo(profile_north_1, profile_north_2, RoofSlopeTypes.ROOF_SLOPE_FLAT, risk_cat, WindOrientations.WIND_ORIENTATION_PARALLELTORIDGE);
 
-            // Create the wind provision models for wind in the east (perpendicular to ridge) and in the north (parallel to ridge)
-            WindProvisions wind_prov_east = new WindProvisions(V, bldg_East, exp);
-            WindProvisions wind_prov_north = new WindProvisions(V, bldg_North, exp);
+            //// Create the wind provision models for wind in the east (perpendicular to ridge) and in the north (parallel to ridge)
+            //WindProvisions wind_prov_east = new WindProvisions(V, bldg_East, exp);
+            //WindProvisions wind_prov_north = new WindProvisions(V, bldg_North, exp);
 
             // Create our viewmodels
  //           WindVM_East_A = CreateWindViewModels(MainCanvas, bldg_East, wind_prov_east, WindOrientations.WIND_ORIENTATION_NORMALTORIDGE, WindCasesDesignation.WIND_CASE_A);
@@ -586,19 +586,24 @@ namespace WindCalculator
 
 
 
+            // Create the model for the building structure
             if (bIsDirectXEnabled)
             {
-                DModel model = new DModel();
-                model = BuildingVM.CreateModel((DirectXDrawingPipeline)PipelineList[0], ModelElementTypes.MODEL_ELEMENT_TRIANGLE);
-                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
+                List<DModel> list = new List<DModel>();
+                list = BuildingVM.CreateModel((DirectXDrawingPipeline)PipelineList[0]);
 
-                model = new DModel();
-                model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
-                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
+                foreach(var item in list)
+                {
+                    ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(item);
+                }
 
-                model = new DModel();
-                model.InitializeBuffer(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
-                ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
+                //DModel model = new DModel();
+                //model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
+                //((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
+
+                //model = new DModel();
+                //model.InitializeBuffer(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
+                //((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
             }
             else
             {

@@ -69,7 +69,8 @@ namespace WindCalculator.Model
 
         private void CreateWPFModel(CanvasDrawingPipeline pipeline)
         {
-                // Create WPF specific stuff here.
+            // Create WPF specific stuff here.
+            throw new NotImplementedException("WPF drawing not supported in UCSIcon for now");
 
         }
 

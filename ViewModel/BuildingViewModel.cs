@@ -5,6 +5,7 @@ using DrawingPipeline.DirectX;
 using DrawingPipelineLibrary.DirectX;
 using SharpDX.Direct3D11;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -15,57 +16,9 @@ namespace WindCalculator.ViewModel
     public class BuildingViewModel
     {
         public BuildingModel BldgModel { get; set; }
-        public BuildingInfo Model { get; set; }
+
+        public List<DModel> WallModels { get; set; } = new List<DModel>();
         public Canvas DrawingCanvas { get; set; }
-
-        /// <summary>
-        /// UCS Icon points
-        /// </summary>
-        public Vector4 UCS_X_START_SC { get; set; }
-        public Vector4 UCS_X_END_SC { get; set; }
-        public Vector4 UCS_Y_START_SC { get; set; }
-        public Vector4 UCS_Y_END_SC { get; set; }
-        public Vector4 UCS_Z_START_SC { get; set; }
-        public Vector4 UCS_Z_END_SC { get; set; }
-
-
-
-
-        public Vector4 WW_GRD_1_SC { get; set; }
-        public Vector4 WW_15_1_SC { get; set; }
-        public Vector4 WW_H_1_SC { get; set; }
-        public Vector4 ORIGIN_1_SC { get; set; } = new Vector4();
-        public Vector4 ORIGIN_1_Test { get; set; } = new Vector4();
-
-        public Vector4 RIDGE_1_SC { get; set; } = new Vector4();
-
-        public Vector4 LW_H_1_SC { get; set; }
-        public Vector4 LW_15_1_SC { get; set; }
-        public Vector4 LW_GRD_1_SC { get; set; }
-
-
-        public Vector4 WW_GRD_2_SC { get; set; }
-        public Vector4 WW_15_2_SC { get; set; }
-        public Vector4 WW_H_2_SC { get; set; }
-        public Vector4 ORIGIN_2_SC { get; set; } = new Vector4();
-        public Vector4 RIDGE_2_SC { get; set; } = new Vector4();
-
-        public Vector4 LW_H_2_SC { get; set; }
-        public Vector4 LW_15_2_SC { get; set; }
-        public Vector4 LW_GRD_2_SC { get; set; }
-
-
-        public Vector4[] RoofProfile_1_SC { get; set; }
-        public Vector4[] RoofProfile_2_SC { get; set; }
-
-        /// <summary>
-        /// Pressure zone points in screen coordinates
-        /// </summary>
-        public Vector4[] RoofZonePoints_1_SC { get; set; }
-        public Vector4[] RoofZonePoints_2_SC { get; set; }
-
-        public double SCALE_FACTOR {get; set;}
-
         public WindOrientations WindOrient { get; set; } = WindOrientations.WIND_ORIENTATION_NORMALTORIDGE;
 
 
@@ -81,10 +34,10 @@ namespace WindCalculator.ViewModel
         }
         public BuildingViewModel(Canvas canvas, BuildingInfo bldg, double drawing_scale_factor, WindOrientations orient)
         {
-            Model = bldg;
-            SCALE_FACTOR = drawing_scale_factor;
-            WindOrient = orient;
-            DrawingCanvas = canvas;
+            //Model = bldg;
+            //SCALE_FACTOR = drawing_scale_factor;
+            //WindOrient = orient;
+            //DrawingCanvas = canvas;
 
             //CameraObj = new Camera(0, 0, 150.0f, 0, 1, 0, 90, 0);
             // Update our camera stuff
@@ -121,8 +74,8 @@ namespace WindCalculator.ViewModel
 
         public void UpdateScreenCoords()
         {
-            BuildingInfo bldg = Model;
-            Canvas canvas = DrawingCanvas;
+            //BuildingInfo bldg = Model;
+            //Canvas canvas = DrawingCanvas;
 
             //UCS_X_START_SC = Camera.WorldToScreen(bldg.UCS_X_START, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
             //UCS_Y_START_SC = Camera.WorldToScreen(bldg.UCS_Y_START, CameraObj.ModelMatrix, CameraObj.ProjectionMatrix, CameraObj.ViewMatrix, canvas.Width, canvas.Height);
@@ -182,149 +135,182 @@ namespace WindCalculator.ViewModel
 
         public void Draw(double dim_text_ht)
         {
-            Update();
+            //Update();
 
-            // Draw coord info
-            double text_ht = 12;
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, 0, 0, "Model COORDS: ", Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 1.0f, 0, "WW_GRD_1 <X,Y,Z>: " + Model.WW_GRD_1.X.ToString() + ", " + Model.WW_GRD_1.Y.ToString() + ", " + Model.WW_GRD_1.Z.ToString(), Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 2.0f, 0, "WW_H_1 <X,Y,Z>: " + Model.WW_H_1.X.ToString() + ", " + Model.WW_H_1.Y.ToString() + ", " + Model.WW_H_1.Z.ToString(), Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 3.0f, 0, "LW_GRD_1 <X,Y,Z>: " + Model.LW_GRD_1.X.ToString() + ", " + Model.LW_GRD_1.Y.ToString() + ", " + Model.LW_GRD_1.Z.ToString(), Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 4.0f, 0, "LW_H_1 <X,Y,Z>: " + Model.LW_H_1.X.ToString() + ", " + Model.LW_H_1.Y.ToString() + ", " + Model.LW_H_1.Z.ToString(), Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 5.0f, 0, "WW_GRD_2 <X,Y,Z>: " + Model.WW_GRD_2.X.ToString() + ", " + Model.WW_GRD_2.Y.ToString() + ", " + Model.WW_GRD_2.Z.ToString(), Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 6.0f, 0, "WW_H_2 <X,Y,Z>: " + Model.WW_H_2.X.ToString() + ", " + Model.WW_H_2.Y.ToString() + ", " + Model.WW_H_2.Z.ToString(), Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 7.0f, 0, "LW_GRD_2 <X,Y,Z>: " + Model.LW_GRD_2.X.ToString() + ", " + Model.LW_GRD_2.Y.ToString() + ", " + Model.LW_GRD_2.Z.ToString(), Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 8.0f, 0, "LW_H_2 <X,Y,Z>: " + Model.LW_H_2.X.ToString() + ", " + Model.LW_H_2.Y.ToString() + ", " + Model.LW_H_2.Z.ToString(), Brushes.Black, text_ht);
-
-
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, 0, 0, "SCREEN COORDS: ", Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 1.0f, 0, "WW_GRD_1_SC <X,Y,Z>: " + WW_GRD_1_SC.X.ToString() + ", " + WW_GRD_1_SC.Y.ToString() + ", " + WW_GRD_1_SC.Z.ToString(), Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 2.0f, 0, "WW_H_1_SC <X,Y,Z>: " + WW_H_1_SC.X.ToString() + ", " + WW_H_1_SC.Y.ToString() + ", " + WW_H_1_SC.Z.ToString(), Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 3.0f, 0, "LW_GRD_1_SC <X,Y,Z>: " + LW_GRD_1_SC.X.ToString() + ", " + LW_GRD_1_SC.Y.ToString() + ", " + LW_GRD_1_SC.Z.ToString(), Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 4.0f, 0, "LW_H_1_SC <X,Y,Z>: " + LW_H_1_SC.X.ToString() + ", " + LW_H_1_SC.Y.ToString() + ", " + LW_H_1_SC.Z.ToString(), Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 5.0f, 0, "WW_GRD_2_SC <X,Y,Z>: " + WW_GRD_2_SC.X.ToString() + ", " + WW_GRD_2_SC.Y.ToString() + ", " + WW_GRD_2_SC.Z.ToString(), Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 6.0f, 0, "WW_H_2_SC <X,Y,Z>: " + WW_H_2_SC.X.ToString() + ", " + WW_H_2_SC.Y.ToString() + ", " + WW_H_2_SC.Z.ToString(), Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 7.0f, 0, "LW_GRD_2_SC <X,Y,Z>: " + LW_GRD_2_SC.X.ToString() + ", " + LW_GRD_2_SC.Y.ToString() + ", " + LW_GRD_2_SC.Z.ToString(), Brushes.Black, text_ht);
-            DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 8.0f, 0, "LW_H_2_SC <X,Y,Z>: " + LW_H_2_SC.X.ToString() + ", " + LW_H_2_SC.Y.ToString() + ", " + LW_H_2_SC.Z.ToString(), Brushes.Black, text_ht);
+            //// Draw coord info
+            //double text_ht = 12;
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, 0, 0, "Model COORDS: ", Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 1.0f, 0, "WW_GRD_1 <X,Y,Z>: " + Model.WW_GRD_1.X.ToString() + ", " + Model.WW_GRD_1.Y.ToString() + ", " + Model.WW_GRD_1.Z.ToString(), Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 2.0f, 0, "WW_H_1 <X,Y,Z>: " + Model.WW_H_1.X.ToString() + ", " + Model.WW_H_1.Y.ToString() + ", " + Model.WW_H_1.Z.ToString(), Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 3.0f, 0, "LW_GRD_1 <X,Y,Z>: " + Model.LW_GRD_1.X.ToString() + ", " + Model.LW_GRD_1.Y.ToString() + ", " + Model.LW_GRD_1.Z.ToString(), Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 4.0f, 0, "LW_H_1 <X,Y,Z>: " + Model.LW_H_1.X.ToString() + ", " + Model.LW_H_1.Y.ToString() + ", " + Model.LW_H_1.Z.ToString(), Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 5.0f, 0, "WW_GRD_2 <X,Y,Z>: " + Model.WW_GRD_2.X.ToString() + ", " + Model.WW_GRD_2.Y.ToString() + ", " + Model.WW_GRD_2.Z.ToString(), Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 6.0f, 0, "WW_H_2 <X,Y,Z>: " + Model.WW_H_2.X.ToString() + ", " + Model.WW_H_2.Y.ToString() + ", " + Model.WW_H_2.Z.ToString(), Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 7.0f, 0, "LW_GRD_2 <X,Y,Z>: " + Model.LW_GRD_2.X.ToString() + ", " + Model.LW_GRD_2.Y.ToString() + ", " + Model.LW_GRD_2.Z.ToString(), Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 250, text_ht * 8.0f, 0, "LW_H_2 <X,Y,Z>: " + Model.LW_H_2.X.ToString() + ", " + Model.LW_H_2.Y.ToString() + ", " + Model.LW_H_2.Z.ToString(), Brushes.Black, text_ht);
 
 
-
-            // WW points frame1
-            double pt1_x, pt1_y, pt2_x, pt2_y, pt3_x, pt3_y;
-
-            // WW points frame2
-            double pt4_x, pt4_y, pt5_x, pt5_y, pt6_x, pt6_y;
-
-            // LW points frame 1
-            double pt7_x, pt7_y, pt8_x, pt8_y, pt9_x, pt9_y;
-
-            // LW points frame 2
-            double pt10_x, pt10_y, pt11_x, pt11_y, pt12_x, pt12_y;
-
-            // Ridge points
-            double pt13_x, pt13_y, pt14_x, pt14_y;
-
-            pt1_x = WW_GRD_1_SC.X;
-            pt1_y = WW_GRD_1_SC.Y;
-            pt2_x = WW_15_1_SC.X;
-            pt2_y = WW_15_1_SC.Y;
-            pt3_x = WW_H_1_SC.X;
-            pt3_y = WW_H_1_SC.Y;
-
-            pt4_x = WW_GRD_2_SC.X;
-            pt4_y = WW_GRD_2_SC.Y;
-            pt5_x = WW_15_2_SC.X;
-            pt5_y = WW_15_2_SC.Y;
-            pt6_x = WW_H_2_SC.X;
-            pt6_y = WW_H_2_SC.Y;
-
-            pt7_x = LW_GRD_1_SC.X;
-            pt7_y = LW_GRD_1_SC.Y;
-            pt8_x = LW_15_1_SC.X;
-            pt8_y = LW_15_1_SC.Y;
-            pt9_x = LW_H_1_SC.X;
-            pt9_y = LW_H_1_SC.Y;
-
-            pt10_x = LW_GRD_2_SC.X;
-            pt10_y = LW_GRD_2_SC.Y;
-            pt11_x = LW_15_2_SC.X;
-            pt11_y = LW_15_2_SC.Y;
-            pt12_x = LW_H_2_SC.X;
-            pt12_y = LW_H_2_SC.Y;
-
-            pt13_x = RIDGE_1_SC.X;
-            pt13_y = RIDGE_1_SC.Y;
-            pt14_x = RIDGE_2_SC.X;
-            pt14_y = RIDGE_2_SC.Y;
-
-            // Draw the UCS coords
-            DrawingHelpers.DrawLine(DrawingCanvas, UCS_X_START_SC.X, UCS_X_START_SC.Y, UCS_X_END_SC.X, UCS_X_END_SC.Y, Brushes.MediumBlue, 2, Linetypes.LINETYPE_DASHED);
-            DrawingHelpers.DrawText(DrawingCanvas, UCS_X_END_SC.X, UCS_X_END_SC.Y, UCS_X_END_SC.Z, "X+", Brushes.MediumBlue, 8);
-            DrawingHelpers.DrawLine(DrawingCanvas, UCS_Y_START_SC.X, UCS_Y_START_SC.Y, UCS_Y_END_SC.X, UCS_Y_END_SC.Y, Brushes.MediumVioletRed, 2, Linetypes.LINETYPE_DASHED);
-            DrawingHelpers.DrawText(DrawingCanvas, UCS_Y_END_SC.X, UCS_Y_END_SC.Y, UCS_Y_END_SC.Z, "Y+", Brushes.MediumVioletRed, 8);
-            DrawingHelpers.DrawLine(DrawingCanvas, UCS_Z_START_SC.X, UCS_Z_START_SC.Y, UCS_Z_END_SC.X, UCS_Z_END_SC.Y, Brushes.MediumSpringGreen, 2, Linetypes.LINETYPE_DASHED);
-            DrawingHelpers.DrawText(DrawingCanvas, UCS_Z_END_SC.X, UCS_Z_END_SC.Y, UCS_Z_END_SC.Z, "Z+", Brushes.MediumSpringGreen, 8);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, 0, 0, "SCREEN COORDS: ", Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 1.0f, 0, "WW_GRD_1_SC <X,Y,Z>: " + WW_GRD_1_SC.X.ToString() + ", " + WW_GRD_1_SC.Y.ToString() + ", " + WW_GRD_1_SC.Z.ToString(), Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 2.0f, 0, "WW_H_1_SC <X,Y,Z>: " + WW_H_1_SC.X.ToString() + ", " + WW_H_1_SC.Y.ToString() + ", " + WW_H_1_SC.Z.ToString(), Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 3.0f, 0, "LW_GRD_1_SC <X,Y,Z>: " + LW_GRD_1_SC.X.ToString() + ", " + LW_GRD_1_SC.Y.ToString() + ", " + LW_GRD_1_SC.Z.ToString(), Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 4.0f, 0, "LW_H_1_SC <X,Y,Z>: " + LW_H_1_SC.X.ToString() + ", " + LW_H_1_SC.Y.ToString() + ", " + LW_H_1_SC.Z.ToString(), Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 5.0f, 0, "WW_GRD_2_SC <X,Y,Z>: " + WW_GRD_2_SC.X.ToString() + ", " + WW_GRD_2_SC.Y.ToString() + ", " + WW_GRD_2_SC.Z.ToString(), Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 6.0f, 0, "WW_H_2_SC <X,Y,Z>: " + WW_H_2_SC.X.ToString() + ", " + WW_H_2_SC.Y.ToString() + ", " + WW_H_2_SC.Z.ToString(), Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 7.0f, 0, "LW_GRD_2_SC <X,Y,Z>: " + LW_GRD_2_SC.X.ToString() + ", " + LW_GRD_2_SC.Y.ToString() + ", " + LW_GRD_2_SC.Z.ToString(), Brushes.Black, text_ht);
+            //DrawingHelpersLibrary.DrawingHelpers.DrawText(DrawingCanvas, 500, text_ht * 8.0f, 0, "LW_H_2_SC <X,Y,Z>: " + LW_H_2_SC.X.ToString() + ", " + LW_H_2_SC.Y.ToString() + ", " + LW_H_2_SC.Z.ToString(), Brushes.Black, text_ht);
 
 
 
-            // Draw the ground
-            //DrawingHelpers.DrawLine(canvas, WW_GRD_1_SC.X, WW_GRD_1_SC.Y, LW_GRD_1_SC.X, LW_GRD_1_SC.Y, Brushes.Black, 3, Linetypes.LINETYPE_DASHED); ;
-            DrawingHelpers.DrawLine(DrawingCanvas, pt1_x, pt1_y, pt7_x, pt7_y, Brushes.Black, 3, Linetypes.LINETYPE_DASHED);
-            DrawingHelpers.DrawLine(DrawingCanvas, pt4_x, pt4_y, pt10_x, pt10_y, Brushes.Red, 3, Linetypes.LINETYPE_DASHED);
+            //// WW points frame1
+            //double pt1_x, pt1_y, pt2_x, pt2_y, pt3_x, pt3_y;
 
-            //// Draw the WW wall object for frame #1
-            DrawingHelpers.DrawLine(DrawingCanvas, pt1_x, pt1_y, pt2_x, pt2_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);   // 0-15 WW
-            DrawingHelpers.DrawLine(DrawingCanvas, pt2_x, pt2_y, pt3_x, pt3_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); // 15-H WW
+            //// WW points frame2
+            //double pt4_x, pt4_y, pt5_x, pt5_y, pt6_x, pt6_y;
 
-            //// Draw the WW wall object for frame #2
-            DrawingHelpers.DrawLine(DrawingCanvas, pt4_x, pt4_y, pt5_x, pt5_y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID);   // 0-15 WW
-            DrawingHelpers.DrawLine(DrawingCanvas, pt5_x, pt5_y, pt6_x, pt6_y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID); // 15-H WW
+            //// LW points frame 1
+            //double pt7_x, pt7_y, pt8_x, pt8_y, pt9_x, pt9_y;
 
-            //////Draw the LW object line for frame #1
-            DrawingHelpers.DrawLine(DrawingCanvas, pt7_x, pt7_y, pt8_x, pt8_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
-            DrawingHelpers.DrawLine(DrawingCanvas, pt8_x, pt8_y, pt9_x, pt9_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
+            //// LW points frame 2
+            //double pt10_x, pt10_y, pt11_x, pt11_y, pt12_x, pt12_y;
 
-            // Draw the LW wall object for frame #2
-            DrawingHelpers.DrawLine(DrawingCanvas, pt10_x, pt10_y, pt11_x, pt11_y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID);
-            DrawingHelpers.DrawLine(DrawingCanvas, pt11_x, pt11_y, pt12_x, pt12_y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID);
+            //// Ridge points
+            //double pt13_x, pt13_y, pt14_x, pt14_y;
 
-            // Draw WW_H_1 to WW_H_2 and LW_H_1 to LW_H_2
-            DrawingHelpers.DrawLine(DrawingCanvas, pt3_x, pt3_y, pt6_x, pt6_y, Brushes.Purple, 3, Linetypes.LINETYPE_SOLID);
-            DrawingHelpers.DrawLine(DrawingCanvas, pt9_x, pt9_y, pt12_x, pt12_y, Brushes.Purple, 3, Linetypes.LINETYPE_SOLID);
-            DrawingHelpers.DrawCircle(DrawingCanvas, pt3_x, pt3_y, Brushes.Transparent, Brushes.Purple, 10, 1, Linetypes.LINETYPE_SOLID);
-            DrawingHelpers.DrawCircle(DrawingCanvas, pt9_x, pt9_y, Brushes.Transparent, Brushes.Purple, 10, 1, Linetypes.LINETYPE_SOLID);
+            //pt1_x = WW_GRD_1_SC.X;
+            //pt1_y = WW_GRD_1_SC.Y;
+            //pt2_x = WW_15_1_SC.X;
+            //pt2_y = WW_15_1_SC.Y;
+            //pt3_x = WW_H_1_SC.X;
+            //pt3_y = WW_H_1_SC.Y;
 
-            // Draw RIDGE_1 to RIDGE_2
-            if ((Double.IsNaN(RIDGE_1_SC.X) || Double.IsNaN(RIDGE_1_SC.Y) || Double.IsNaN(RIDGE_1_SC.Z) || Double.IsNaN(RIDGE_2_SC.X) || Double.IsNaN(RIDGE_2_SC.Y) || Double.IsNaN(RIDGE_2_SC.Z)) != true)
-            {
-                DrawingHelpers.DrawLine(DrawingCanvas, pt13_x, pt13_y, pt14_x, pt14_y, Brushes.Purple, 3, Linetypes.LINETYPE_SOLID);
-                DrawingHelpers.DrawCircle(DrawingCanvas, pt13_x, pt13_y, Brushes.Transparent, Brushes.Purple, 10, 1, Linetypes.LINETYPE_SOLID);
-            }
+            //pt4_x = WW_GRD_2_SC.X;
+            //pt4_y = WW_GRD_2_SC.Y;
+            //pt5_x = WW_15_2_SC.X;
+            //pt5_y = WW_15_2_SC.Y;
+            //pt6_x = WW_H_2_SC.X;
+            //pt6_y = WW_H_2_SC.Y;
+
+            //pt7_x = LW_GRD_1_SC.X;
+            //pt7_y = LW_GRD_1_SC.Y;
+            //pt8_x = LW_15_1_SC.X;
+            //pt8_y = LW_15_1_SC.Y;
+            //pt9_x = LW_H_1_SC.X;
+            //pt9_y = LW_H_1_SC.Y;
+
+            //pt10_x = LW_GRD_2_SC.X;
+            //pt10_y = LW_GRD_2_SC.Y;
+            //pt11_x = LW_15_2_SC.X;
+            //pt11_y = LW_15_2_SC.Y;
+            //pt12_x = LW_H_2_SC.X;
+            //pt12_y = LW_H_2_SC.Y;
+
+            //pt13_x = RIDGE_1_SC.X;
+            //pt13_y = RIDGE_1_SC.Y;
+            //pt14_x = RIDGE_2_SC.X;
+            //pt14_y = RIDGE_2_SC.Y;
+
+            //// Draw the UCS coords
+            //DrawingHelpers.DrawLine(DrawingCanvas, UCS_X_START_SC.X, UCS_X_START_SC.Y, UCS_X_END_SC.X, UCS_X_END_SC.Y, Brushes.MediumBlue, 2, Linetypes.LINETYPE_DASHED);
+            //DrawingHelpers.DrawText(DrawingCanvas, UCS_X_END_SC.X, UCS_X_END_SC.Y, UCS_X_END_SC.Z, "X+", Brushes.MediumBlue, 8);
+            //DrawingHelpers.DrawLine(DrawingCanvas, UCS_Y_START_SC.X, UCS_Y_START_SC.Y, UCS_Y_END_SC.X, UCS_Y_END_SC.Y, Brushes.MediumVioletRed, 2, Linetypes.LINETYPE_DASHED);
+            //DrawingHelpers.DrawText(DrawingCanvas, UCS_Y_END_SC.X, UCS_Y_END_SC.Y, UCS_Y_END_SC.Z, "Y+", Brushes.MediumVioletRed, 8);
+            //DrawingHelpers.DrawLine(DrawingCanvas, UCS_Z_START_SC.X, UCS_Z_START_SC.Y, UCS_Z_END_SC.X, UCS_Z_END_SC.Y, Brushes.MediumSpringGreen, 2, Linetypes.LINETYPE_DASHED);
+            //DrawingHelpers.DrawText(DrawingCanvas, UCS_Z_END_SC.X, UCS_Z_END_SC.Y, UCS_Z_END_SC.Z, "Z+", Brushes.MediumSpringGreen, 8);
 
 
-            // Draw the Roof object line for frame #1
-            for (int i = 0; i < RoofProfile_1_SC.Length - 1; i++)
-            {
-                Vector4 r_pt1 = RoofProfile_1_SC[i];
-                Vector4 r_pt2 = RoofProfile_1_SC[i + 1];
 
-                DrawingHelpers.DrawLine(DrawingCanvas, r_pt1.X, r_pt1.Y, r_pt2.X, r_pt2.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
-            }
+            //// Draw the ground
+            ////DrawingHelpers.DrawLine(canvas, WW_GRD_1_SC.X, WW_GRD_1_SC.Y, LW_GRD_1_SC.X, LW_GRD_1_SC.Y, Brushes.Black, 3, Linetypes.LINETYPE_DASHED); ;
+            //DrawingHelpers.DrawLine(DrawingCanvas, pt1_x, pt1_y, pt7_x, pt7_y, Brushes.Black, 3, Linetypes.LINETYPE_DASHED);
+            //DrawingHelpers.DrawLine(DrawingCanvas, pt4_x, pt4_y, pt10_x, pt10_y, Brushes.Red, 3, Linetypes.LINETYPE_DASHED);
 
-            // Draw the Roof object line for frame #2
-            for (int i = 0; i < RoofProfile_2_SC.Length - 1; i++)
-            {
-                Vector4 r_pt1 = RoofProfile_2_SC[i];
-                Vector4 r_pt2 = RoofProfile_2_SC[i + 1];
+            ////// Draw the WW wall object for frame #1
+            //DrawingHelpers.DrawLine(DrawingCanvas, pt1_x, pt1_y, pt2_x, pt2_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);   // 0-15 WW
+            //DrawingHelpers.DrawLine(DrawingCanvas, pt2_x, pt2_y, pt3_x, pt3_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID); // 15-H WW
 
-                DrawingHelpers.DrawLine(DrawingCanvas, r_pt1.X, r_pt1.Y, r_pt2.X, r_pt2.Y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID);
-            }
+            ////// Draw the WW wall object for frame #2
+            //DrawingHelpers.DrawLine(DrawingCanvas, pt4_x, pt4_y, pt5_x, pt5_y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID);   // 0-15 WW
+            //DrawingHelpers.DrawLine(DrawingCanvas, pt5_x, pt5_y, pt6_x, pt6_y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID); // 15-H WW
+
+            ////////Draw the LW object line for frame #1
+            //DrawingHelpers.DrawLine(DrawingCanvas, pt7_x, pt7_y, pt8_x, pt8_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
+            //DrawingHelpers.DrawLine(DrawingCanvas, pt8_x, pt8_y, pt9_x, pt9_y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
+
+            //// Draw the LW wall object for frame #2
+            //DrawingHelpers.DrawLine(DrawingCanvas, pt10_x, pt10_y, pt11_x, pt11_y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID);
+            //DrawingHelpers.DrawLine(DrawingCanvas, pt11_x, pt11_y, pt12_x, pt12_y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID);
+
+            //// Draw WW_H_1 to WW_H_2 and LW_H_1 to LW_H_2
+            //DrawingHelpers.DrawLine(DrawingCanvas, pt3_x, pt3_y, pt6_x, pt6_y, Brushes.Purple, 3, Linetypes.LINETYPE_SOLID);
+            //DrawingHelpers.DrawLine(DrawingCanvas, pt9_x, pt9_y, pt12_x, pt12_y, Brushes.Purple, 3, Linetypes.LINETYPE_SOLID);
+            //DrawingHelpers.DrawCircle(DrawingCanvas, pt3_x, pt3_y, Brushes.Transparent, Brushes.Purple, 10, 1, Linetypes.LINETYPE_SOLID);
+            //DrawingHelpers.DrawCircle(DrawingCanvas, pt9_x, pt9_y, Brushes.Transparent, Brushes.Purple, 10, 1, Linetypes.LINETYPE_SOLID);
+
+            //// Draw RIDGE_1 to RIDGE_2
+            //if ((Double.IsNaN(RIDGE_1_SC.X) || Double.IsNaN(RIDGE_1_SC.Y) || Double.IsNaN(RIDGE_1_SC.Z) || Double.IsNaN(RIDGE_2_SC.X) || Double.IsNaN(RIDGE_2_SC.Y) || Double.IsNaN(RIDGE_2_SC.Z)) != true)
+            //{
+            //    DrawingHelpers.DrawLine(DrawingCanvas, pt13_x, pt13_y, pt14_x, pt14_y, Brushes.Purple, 3, Linetypes.LINETYPE_SOLID);
+            //    DrawingHelpers.DrawCircle(DrawingCanvas, pt13_x, pt13_y, Brushes.Transparent, Brushes.Purple, 10, 1, Linetypes.LINETYPE_SOLID);
+            //}
+
+
+            //// Draw the Roof object line for frame #1
+            //for (int i = 0; i < RoofProfile_1_SC.Length - 1; i++)
+            //{
+            //    Vector4 r_pt1 = RoofProfile_1_SC[i];
+            //    Vector4 r_pt2 = RoofProfile_1_SC[i + 1];
+
+            //    DrawingHelpers.DrawLine(DrawingCanvas, r_pt1.X, r_pt1.Y, r_pt2.X, r_pt2.Y, Brushes.Black, 3, Linetypes.LINETYPE_SOLID);
+            //}
+
+            //// Draw the Roof object line for frame #2
+            //for (int i = 0; i < RoofProfile_2_SC.Length - 1; i++)
+            //{
+            //    Vector4 r_pt1 = RoofProfile_2_SC[i];
+            //    Vector4 r_pt2 = RoofProfile_2_SC[i + 1];
+
+            //    DrawingHelpers.DrawLine(DrawingCanvas, r_pt1.X, r_pt1.Y, r_pt2.X, r_pt2.Y, Brushes.Red, 3, Linetypes.LINETYPE_SOLID);
+            //}
         }
 
-        public DModel CreateModel(DirectXDrawingPipeline pipeline, ModelElementTypes element_type)
+        public List<DModel> CreateModel(DirectXDrawingPipeline pipeline)
         {
-            DModel model = new DModel();
-            return InitializeDirectXBuffers(pipeline, model, element_type);
+             WallModels = new List<DModel>();
+
+            try
+            {
+
+                foreach(var item in BldgModel.WallsList)
+                {
+                    DModel model = new DModel();
+                    model.ModelElementType = ModelElementTypes.MODEL_ELEMENT_TRIANGLE;
+
+                    model = item.CreateModel((DirectXDrawingPipeline)pipeline);
+                    WallModels.Add(model);
+//                    ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.AddModel(model);
+                }
+
+                //if (pipeline.GetType() == typeof(DirectXDrawingPipeline))
+                //{
+                //    CreateDirectXModel((DirectXDrawingPipeline)pipeline);
+                //}
+                //else if (pipeline.GetType() == typeof(CanvasDrawingPipeline))
+                //{
+                //    CreateWPFModel((CanvasDrawingPipeline)pipeline);
+                //}
+                //else
+                //{
+                //    throw new NotImplementedException("In UCSIcon.CreateModel(): invalid pipeline type received");
+                //}
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw new NotImplementedException("In UCSIcon.CreateModel(): error creating Model");
+            }
+
+            return WallModels;
         }
 
         /// <summary>
@@ -353,20 +339,20 @@ namespace WindCalculator.ViewModel
 					// Bottom right.
 					new DColorShader.DVertex()
                     {
-                        position = new SharpDX.Vector3(BldgModel.Length, 0, 0),
+                        position = new SharpDX.Vector3((float)BldgModel.L, 0, 0),
                         color = wall1_color
                     },
 					// top Right.
 					new DColorShader.DVertex()
                     {
-                        position = new SharpDX.Vector3(BldgModel.Length, BldgModel.Height, 0),
+                        position = new SharpDX.Vector3((float)BldgModel.L, (float)BldgModel.H, 0),
                         color = wall1_color
                     },
                     					
                     // Top left.
 					new DColorShader.DVertex()
                     {
-                        position = new SharpDX.Vector3(0, BldgModel.Height, 0),
+                        position = new SharpDX.Vector3(0, (float)BldgModel.H, 0),
                         color = wall1_color
                     },
 
@@ -375,27 +361,27 @@ namespace WindCalculator.ViewModel
 					// Bottom left.
                     new DColorShader.DVertex()
                     {
-                        position = new SharpDX.Vector3(BldgModel.Length, 0, BldgModel.Width),
+                        position = new SharpDX.Vector3((float)BldgModel.L, 0, (float)BldgModel.B),
                         color = wall2_color
                     },
 
 					// Bottom right.
 					new DColorShader.DVertex()
                     {
-                        position = new SharpDX.Vector3(0, 0, BldgModel.Width),
+                        position = new SharpDX.Vector3(0, 0, (float)BldgModel.B),
                         color = wall2_color
                     },
 					// top Right.
 					new DColorShader.DVertex()
                     {
-                        position = new SharpDX.Vector3(0, BldgModel.Height, BldgModel.Width),
+                        position = new SharpDX.Vector3(0, (float)BldgModel.H, (float)BldgModel.B),
                         color = wall2_color
                     },
                     					
                     // Top left.
 					new DColorShader.DVertex()
                     {
-                        position = new SharpDX.Vector3(BldgModel.Length, BldgModel.Height, BldgModel.Width),
+                        position = new SharpDX.Vector3((float)BldgModel.L, (float)BldgModel.H, (float)BldgModel.B),
                         color = wall2_color
                     },
                 };
