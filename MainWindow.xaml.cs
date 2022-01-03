@@ -39,6 +39,8 @@ namespace WindCalculator
 
         // Gridline model object
         public Gridlines GridlineModel { get; set; } = new Gridlines();
+        public UCSIcon UCSIconModel { get; set; } = new UCSIcon(new SharpDX.Vector4(0,0,0,1));
+
 
         /// <summary>
         /// The WindProvision view models for this graphic for a wind that is acting on the east face of the building.
@@ -531,6 +533,11 @@ namespace WindCalculator
             {
                 // TODO: COMPLETE WPF IMPLEMENTATION FOR GRIDLINES
             }
+
+            // Create the UCSIcon (this is last so it draws over the top of everything else)
+            UCSIconModel = new UCSIcon(new SharpDX.Vector4(0, 0, 0, 1));
+            UCSIconModel.CreateModel(PipelineList[0]);
+            PipelineList[0].GetDSystem.Graphics.AddModel(UCSIconModel.Model);
         }
 
         private void CreateModel2()
@@ -559,6 +566,11 @@ namespace WindCalculator
                 // TODO: COMPLETE WPF IMPLEMENTATION FOR GRIDLINES
             }
 
+            // Create the UCSIcon (this is last so it draws over the top of everything else)
+            UCSIconModel = new UCSIcon(new SharpDX.Vector4(0, 0, 0, 1));
+            UCSIconModel.CreateModel(PipelineList[0]);
+            PipelineList[0].GetDSystem.Graphics.AddModel(UCSIconModel.Model);
+
         }
 
         private void CreateModel3()
@@ -571,6 +583,8 @@ namespace WindCalculator
             // Create the model for the grid lines
             GridlineModel.CreateModel(PipelineList[0]);
             PipelineList[0].GetDSystem.Graphics.AddModel(GridlineModel.Model);
+
+
 
             if (bIsDirectXEnabled)
             {
@@ -590,6 +604,11 @@ namespace WindCalculator
             {
                 // TODO: COMPLETE WPF IMPLEMENTATION FOR GRIDLINES
             }
+
+            // Create the UCSIcon (this is last so it draws over the top of everything else)
+            UCSIconModel = new UCSIcon(new SharpDX.Vector4(0, 0, 0, 1));
+            UCSIconModel.CreateModel(PipelineList[0]);
+            PipelineList[0].GetDSystem.Graphics.AddModel(UCSIconModel.Model);
 
             //BuildingVM.Render(true, Pipeline);
         }
