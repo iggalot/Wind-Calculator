@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,12 +23,19 @@ namespace WindCalculator
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
         // Flag to desginate whether directXX drawing should be used or more simple WPF canvas drawing
         public bool bIsDirectXEnabled { get; set; } = true;
 
         private static bool bAppNeedsUpdate = false;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            MessageBox.Show("A property was changed");
+        }
 
         // Upper left corner of the UI window in pixels.
         public Point UIInsertPoint { get; set; } = new Point(0, 0);
@@ -82,6 +90,54 @@ namespace WindCalculator
                 str += "-- " + PipelineList.Count + " drawing pipelines active.";
                 return str;
             } 
+        }
+
+        public bool bCameraIsActive
+        {
+            get
+            {
+                if (PipelineList.Count == 0 || PipelineList[0] == null)
+                    return (PipelineList[0].GetDSystem.Graphics.Camera.IsActiveMode);
+                else
+                    return false;
+            }
+            set
+            {
+                if (PipelineList.Count == 0 || PipelineList[0] == null)
+                {
+                    if ((PipelineList[0].GetDSystem.Graphics.Camera.IsActiveMode) != value)
+                    {
+
+                        PipelineList[0].GetDSystem.Graphics.Camera.IsActiveMode = value;
+                        OnPropertyChanged("CameraActiveString");
+                    }
+                }
+            }
+        }
+        public string CameraActiveString
+        {
+            get
+            {
+                string str = "Camera: ";
+                if(PipelineList.Count == 0 || PipelineList[0] == null)
+                {
+                    str += " Uninitialized";
+                } else
+                {
+                    if (PipelineList[0].GetDSystem.Graphics.Camera.IsActiveMode)
+                    {
+                        str += "ACTIVE";
+                    }
+                    else
+                    {
+                        str += "NOT ACTIVE";
+                    }
+
+
+                }
+
+                return str;
+            }
         }
 
         internal void ChangeAppNeedsUpdateStatus(bool value)
@@ -352,8 +408,6 @@ namespace WindCalculator
         /// </summary>
         private void OnUserCreate()
         {
-
-
             ExposureCategories exp = ExposureCategories.B;
             double V = 115;   // mph
 
@@ -366,64 +420,6 @@ namespace WindCalculator
             // Create a building object
             BuildingModel bldg1 = new BuildingModel(l, b, wall_ht);
             BuildingVM = new BuildingViewModel(bldg1);
-
-            //// Frame 1
-            //Vector4 ww_wall_1 = new Vector4(0.0f, (float)wall_ht, 0, 1.0f);
-            //Vector4 lw_wall_1 = new Vector4(100.0f, (float)wall_ht, 0, 1.0f);
-            //Vector4 ridge_1 = new Vector4(50.0f, (float)(wall_ht + 50.0f), 0, 1.0f);
-
-            //// Frame 2
-            //Vector4 ww_wall_2 = new Vector4(0.0f, (float)wall_ht, (float)b, 1.0f);
-            //Vector4 lw_wall_2 = new Vector4(100.0f, (float)wall_ht, (float)b, 1.0f);
-            //Vector4 ridge_2 = new Vector4(50.0f, (float)(wall_ht + 50.0f), (float)b, 1.0f);
-
-            // Profile of the roof line
-            // TODO:: Need to sort the order of these points or provide some sort of logic (left-to-right) progression of points
-
-            ////TESTING: Sloped roof profile
-            //Vector4[] profile_east_1 = new Vector4[] { ww_wall_1, ridge_1, lw_wall_1 };
-            //Vector4[] profile_east_2 = new Vector4[] { ww_wall_2, ridge_2, lw_wall_2 };
-
-            //// TESTING: Flat roof profile
-            //Vector4[] profile_east_1 = new Vector4[] { ww_wall_1, lw_wall_1 };
-            //Vector4[] profile_east_2 = new Vector4[] { ww_wall_2, lw_wall_2 };
-
-            //Vector4[] profile_north_1 = new Vector4[] { ww_wall_1, ww_wall_2 };
-            //Vector4[] profile_north_2 = new Vector4[] { lw_wall_1, lw_wall_2 };
-
-            //BuildingInfo bldg_East = new SlopedRoofBuildingInfo(profile_east_1, profile_east_2, RoofSlopeTypes.ROOF_SLOPE_SINGLERIDGE, risk_cat);
-            //BuildingInfo bldg_North = new SlopedRoofBuildingInfo(profile_north_1, profile_north_2, RoofSlopeTypes.ROOF_SLOPE_FLAT, risk_cat);
-
-            //////TESTING: flat roof profile
-            //BuildingInfo bldg_East = new BuildingInfo(profile_east_1, profile_east_2, RoofSlopeTypes.ROOF_SLOPE_FLAT, risk_cat, WindOrientations.WIND_ORIENTATION_NORMALTORIDGE);
-            //BuildingInfo bldg_North = new BuildingInfo(profile_north_1, profile_north_2, RoofSlopeTypes.ROOF_SLOPE_FLAT, risk_cat, WindOrientations.WIND_ORIENTATION_PARALLELTORIDGE);
-
-            //// Create the wind provision models for wind in the east (perpendicular to ridge) and in the north (parallel to ridge)
-            //WindProvisions wind_prov_east = new WindProvisions(V, bldg_East, exp);
-            //WindProvisions wind_prov_north = new WindProvisions(V, bldg_North, exp);
-
-            // Create our viewmodels
- //           WindVM_East_A = CreateWindViewModels(MainCanvas, bldg_East, wind_prov_east, WindOrientations.WIND_ORIENTATION_NORMALTORIDGE, WindCasesDesignation.WIND_CASE_A);
- //           WindVM_East_B = CreateWindViewModels(Canvas2, bldg_East, wind_prov_east, WindOrientations.WIND_ORIENTATION_NORMALTORIDGE, WindCasesDesignation.WIND_CASE_B);
- //           WindVM_North_A = CreateWindViewModels(Canvas3, bldg_North, wind_prov_north, WindOrientations.WIND_ORIENTATION_PARALLELTORIDGE, WindCasesDesignation.WIND_CASE_A);
- //           WindVM_North_B = CreateWindViewModels(Canvas4, bldg_North, wind_prov_north, WindOrientations.WIND_ORIENTATION_PARALLELTORIDGE, WindCasesDesignation.WIND_CASE_B);
-        }
-
-        private WindViewModel CreateWindViewModels(Canvas canvas, BuildingInfo bldg, WindProvisions wind_prov, WindOrientations orient, WindCasesDesignation wind_case)
-        {
-            string title = (orient == WindOrientations.WIND_ORIENTATION_NORMALTORIDGE ? "Normal " : " Parallel ") + "to Ridge - Case " + (wind_case == WindCasesDesignation.WIND_CASE_A ? "A" : "B");
-
-            // Set initial scale factors
-            double SCALE_FACTOR_HORIZ = 0.6 * canvas.Width / bldg.L;
-            double SCALE_FACTOR_VERT = 0.6 * canvas.Height / bldg.H;
-            double SCALE_FACTOR = Math.Min(SCALE_FACTOR_HORIZ, SCALE_FACTOR_VERT);
-
-            // create our camera object
-    
-            BuildingViewModel bldg_vm = new BuildingViewModel(canvas, bldg, SCALE_FACTOR, orient);
-            PressureViewModel pressure_vm = new PressureViewModel(canvas, wind_prov, bldg_vm, title, orient, wind_case);
-
-            return new WindViewModel(canvas, bldg_vm, pressure_vm, wind_prov, orient, wind_case);
         }
 
         /// <summary>
@@ -444,24 +440,6 @@ namespace WindCalculator
         {
 
             canvas.Children.Clear();
-
-            //// Center point of current canvas
-            //double x_center = canvas.Width * 0.5;
-            //double y_center = canvas.Height * 0.5;
-
-            //// Draw the centerlines of the canvas
-            //DrawingHelpers.DrawLine(canvas, x_center, 0, x_center, 2.0 * y_center, Brushes.BlueViolet, 1, Linetypes.LINETYPE_PHANTOM);
-            //DrawingHelpers.DrawLine(canvas, 0, y_center, 2.0 * x_center, y_center, Brushes.BlueViolet, 1, Linetypes.LINETYPE_PHANTOM);
-
-            //// Draw the camera state message
-            //string cam_str = (WindVM_East_A.BuildingVM.CameraObj.IsActive ? "ON" : "OFF");
-            //DrawingHelpers.DrawText(canvas, canvas.Width - 100, canvas.Height - 12, 0.0, "CAMERA: " + cam_str, Brushes.Black, 12);
-
-            //// Draw the drawing objects
-            //WindVM_East_A.Draw();
-            ////WindVM_East_B.Draw();
-            ////WindVM_North_A.Draw();
-            ////WindVM_North_B.Draw();
         }
 
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)

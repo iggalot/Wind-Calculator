@@ -30,6 +30,9 @@
             <Button x:Name="Model2" Content="Model2" Click="Model2_Click" Width="100" Height="50"/>
             <Button x:Name="Model3" Content="DirectX" Click="Model3_Click" Width="100" Height="50"/>
         </StackPanel>
-        <TextBlock Grid.Row="4" x:Name="StatusBar" Text="{Binding GetStatusBarString}"/>
+        <StackPanel Orientation="Vertical">
+            <TextBlock Grid.Row="4" x:Name="StatusBar" Text="{Binding GetStatusBarString}"/>
+            <TextBlock Grid.Row="4" x:Name="CameraIsActive" Text="{Binding CameraActiveString}"/>
+        </StackPanel>
     </Grid>
 </Window>

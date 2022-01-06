@@ -7,6 +7,7 @@ using SharpDX.Direct3D11;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using WindCalculator.Model;
@@ -274,19 +275,28 @@ namespace WindCalculator.ViewModel
             //}
         }
 
-        public List<DModel> CreateModel(DirectXDrawingPipeline pipeline)
+        public List<DModel> CreateModel(BaseDrawingPipeline pipeline)
         {
              WallModels = new List<DModel>();
 
             try
             {
-
                 foreach(var item in BldgModel.WallsList)
                 {
                     DModel model = new DModel();
                     model.ModelElementType = ModelElementTypes.MODEL_ELEMENT_TRIANGLE;
 
-                    model = item.CreateModel((DirectXDrawingPipeline)pipeline);
+                    if (pipeline.GetType() == typeof(DirectXDrawingPipeline))
+                    {
+                        model = item.CreateModel(pipeline);
+                    } else if (pipeline.GetType() == typeof(CanvasDrawingPipeline))
+                    {
+                        MessageBox.Show("WPF wall model drawings not supported at this time");
+                    } else
+                    {
+                        throw new NotImplementedException("In UCSIcon.CreateModel(): invalid pipeline type received");
+                    }
+
                     WallModels.Add(model);
 //                    ((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.AddModel(model);
                 }
