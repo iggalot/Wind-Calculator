@@ -34,7 +34,6 @@ namespace WindCalculator
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-            MessageBox.Show("A property was changed");
         }
 
         // Upper left corner of the UI window in pixels.
@@ -42,8 +41,8 @@ namespace WindCalculator
         public static float UIWindowWidth { get; set; } = 800.0f;
         public static float UIWindowHeight { get; set; } = 800.0f;
 
-        public static float DisplayWindowWidth { get; set; } = 600.0f;
-        public static float DisplayWindowHeight { get; set; } = 600.0f;
+        public static float DisplayWindowWidth { get; set; } = 1000.0f;
+        public static float DisplayWindowHeight { get; set; } = 1000.0f;
 
         // Gridline model object
         public Gridlines GridlineModel { get; set; } = new Gridlines();
@@ -87,33 +86,67 @@ namespace WindCalculator
                 else
                     str += "Graphics Mode: WPF Canvas";
 
-                str += "-- " + PipelineList.Count + " drawing pipelines active.";
+                if (PipelineList == null)
+                    str += "No pipeline list is active";
+                else
+                    str += "-- " + PipelineList.Count + " drawing pipelines active.";
+    
                 return str;
             } 
         }
 
-        public bool bCameraIsActive
+        public string GetMouseInfoString
         {
             get
             {
-                if (PipelineList.Count == 0 || PipelineList[0] == null)
-                    return (PipelineList[0].GetDSystem.Graphics.Camera.IsActiveMode);
+                string str = "";
+                if ((PipelineList == null) || PipelineList.Count == 0)
+                    str += "No Mouse info at this time";
                 else
-                    return false;
-            }
-            set
-            {
-                if (PipelineList.Count == 0 || PipelineList[0] == null)
-                {
-                    if ((PipelineList[0].GetDSystem.Graphics.Camera.IsActiveMode) != value)
-                    {
+                    str += "Mouse Position: (" + PipelineList[0].GetDSystem.LastMouseX + " , " + PipelineList[0].GetDSystem.LastMouseY + ")";
 
-                        PipelineList[0].GetDSystem.Graphics.Camera.IsActiveMode = value;
-                        OnPropertyChanged("CameraActiveString");
-                    }
-                }
+                return str;
             }
         }
+
+        public string GetCameraPositionString
+        {
+            get
+            {
+                string str = "";
+                if ((PipelineList == null) || PipelineList.Count == 0)
+                    str += "No Camera info at this time";
+                else
+                    str += PipelineList[0].GetDSystem.Graphics.Camera.CurrentPositionString;
+
+                return str;
+            }
+        }
+
+        //public bool bCameraIsActive
+        //{
+        //    get
+        //    {
+        //        if (PipelineList.Count == 0 || PipelineList[0] == null)
+        //            return (PipelineList[0].GetDSystem.Graphics.Camera.IsActiveMode);
+        //        else
+        //            return false;
+        //    }
+        //    set
+        //    {
+        //        if (PipelineList.Count == 0 || PipelineList[0] == null)
+        //        {
+        //            if ((PipelineList[0].GetDSystem.Graphics.Camera.IsActiveMode) != value)
+        //            {
+
+        //                PipelineList[0].GetDSystem.Graphics.Camera.IsActiveMode = value;
+        //                OnPropertyChanged("CameraActiveString");
+        //                AppNeedsUpdate = true;
+        //            }
+        //        }
+        //    }
+        //}
+
         public string CameraActiveString
         {
             get
@@ -132,8 +165,6 @@ namespace WindCalculator
                     {
                         str += "NOT ACTIVE";
                     }
-
-
                 }
 
                 return str;
@@ -151,6 +182,7 @@ namespace WindCalculator
 
             lock (this)
             {
+                OnUserUpdate();
                 //WriteToConsole(Thread.CurrentThread.Name + " has locked app update to change for " + value.ToString());
                 bAppNeedsUpdate = value;
                 //WriteToConsole(Thread.CurrentThread.Name + " has released app update to new value " + bAppNeedsUpdate.ToString());
@@ -286,16 +318,17 @@ namespace WindCalculator
             while (!AppShouldShutdown)
             {
                 // if the App needs Updating, lock the mutex and perform updating.
-                while (AppNeedsUpdate)
-                {
+               // while (AppNeedsUpdate)
+                //{
+                    OnUserUpdate();
                     //                    Pipeline.Update();
                     
                     //WriteToConsole(Thread.CurrentThread.Name + " wants to change current value " + AppNeedsUpdate + " to FALSE.");
                     AppNeedsUpdate = false;
                     //WriteToConsole(Thread.CurrentThread.Name + " has completed change to " + bAppNeedsUpdate.ToString());
 
-                    continue;
-                }
+                  //  continue;
+                //}
 
                 Thread.Sleep(UIRefreshTimer);
             }
@@ -387,7 +420,24 @@ namespace WindCalculator
         /// Routine that runs everytime it is called (once per frame?  after user input?)
         /// </summary>
         private void OnUserUpdate()
-        {
+        {   
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                StatusBar.Text = GetStatusBarString;
+                MouseInfoBar.Text = GetMouseInfoString;
+                CameraIsActive.Text = CameraActiveString;
+
+                if ((PipelineList == null) || (PipelineList.Count == 0))
+                    CameraPositionString.Text = "No camera defined";
+                else 
+                    CameraPositionString.Text = GetCameraPositionString;
+            }), DispatcherPriority.Normal);
+
+            OnPropertyChanged("GetStatusBarString");
+            OnPropertyChanged("GetMouseInfoString");
+            OnPropertyChanged("CameraActiveString");
+
+
             // Update the view models
             //WindVM_East_A.Update();
             //WindVM_East_B.Update();
