@@ -35,6 +35,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="SharpDX, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1" />
+    <Reference Include="SharpDX.Direct3D11, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1" />
+    <Reference Include="SharpDX.Mathematics, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Numerics" />
@@ -56,7 +59,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Model\TRS_Matrix_Transform.cs" />
+    <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="Model\BuildingModel.cs" />
+    <Compile Include="Model\Gridlines.cs" />
+    <Compile Include="Model\UCSIcon.cs" />
+    <Compile Include="Model\WallModel.cs" />
     <Compile Include="Model\WindModel.cs" />
     <Compile Include="ViewModel\BuildingViewModel.cs" />
     <Compile Include="ViewModel\PressureViewModel.cs" />
@@ -108,6 +115,14 @@
     <ProjectReference Include="..\DrawingHelpersLibrary\DrawingHelpersLibrary.csproj">
       <Project>{8b758ae0-4a37-4642-a50f-23f18cb55ba2}</Project>
       <Name>DrawingHelpersLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DrawingPipelineLibrary\DrawingPipelineLibrary.csproj">
+      <Project>{66ad5a48-2cad-4261-9378-44703541d558}</Project>
+      <Name>DrawingPipelineLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MathLibrary\MathLibrary.csproj">
+      <Project>{e6d73712-5361-42c0-a572-7adff6b9a317}</Project>
+      <Name>MathLibrary</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
