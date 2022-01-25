@@ -552,9 +552,8 @@ namespace WindCalculator
 
             if (bIsDirectXEnabled)
             {
-
-
                 DModel model = new DModel();
+                model.Initialize(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_TRIANGLE, model.bIsTextured, null);
                 model.InitializeBufferTestTriangle_NoTexture(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_TRIANGLE);
                 ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
             } else
@@ -582,10 +581,12 @@ namespace WindCalculator
             if (bIsDirectXEnabled)
             {
                 DModel model = new DModel();
+                model.Initialize(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_TRIANGLE, model.bIsTextured, null);
                 model.InitializeBufferTestTriangle_NoTexture(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
                 ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
 
                 model = new DModel();
+                model.Initialize(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_TRIANGLE, model.bIsTextured, null);
                 model.InitializeBuffer_NoTexture(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
                 ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
             }
@@ -595,7 +596,7 @@ namespace WindCalculator
             }
 
             // Create the UCSIcon (this is last so it draws over the top of everything else)
-            UCSIconModel = new UCSIcon(new SharpDX.Vector4(0, 0, 0, 1));
+            UCSIconModel = new UCSIcon(new SharpDX.Vector4(0, 0, 0, 1));            
             UCSIconModel.CreateModel(PipelineList[0]);
             PipelineList[0].GetDSystem.Graphics.AddModel(UCSIconModel.Model);
 

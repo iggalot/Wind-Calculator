@@ -75,6 +75,8 @@ namespace WindCalculator.Model
         public DModel CreateModel(BaseDrawingPipeline pipeline)
         {
             Model = new DModel();
+            Model.Initialize(((DirectXDrawingPipeline)pipeline).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE, Model.bIsTextured, null);
+
 
             try
             {
