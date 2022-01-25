@@ -465,7 +465,7 @@ namespace WindCalculator
             RiskCategories risk_cat = RiskCategories.II;
             float wall_ht = 100;  // wall height
             float b = 100; // length perpendicular to wind
-            float l = 100; // length parallel to wind
+            float l = 200; // length parallel to wind
 
             // Create a building object
             BuildingModel bldg1 = new BuildingModel(l, b, wall_ht);

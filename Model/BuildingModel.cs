@@ -4,12 +4,24 @@ using System.Collections.Generic;
 
 namespace WindCalculator.Model
 {
+    public enum BuildingWalls
+    {
+        BLDG_WALL_WW = 0,
+        BLDG_WALL_LW = 1,
+        BLDG_WALL_SW_1 = 2,  // left side wall when facing WW wall
+        BLDG_WALL_SW_2 = 3    // right side wall when acing WW wall
+    }
     /// <summary>
     /// Wrapper class for the Building Info basic data model of the ASCE7_10Linrary
     /// </summary>
     public class BuildingModel : BuildingInfo
     {
         public List<WallModel> WallsList { get; set; }
+
+        public WallModel WW_Wall { get => WallsList[(int)(BuildingWalls.BLDG_WALL_WW)]; }
+        public WallModel LW_Wall { get => WallsList[(int)(BuildingWalls.BLDG_WALL_LW)]; }
+        public WallModel SW_Wall_1 { get => WallsList[(int)(BuildingWalls.BLDG_WALL_SW_1)]; }
+        public WallModel SW_Wall_2 { get => WallsList[(int)(BuildingWalls.BLDG_WALL_SW_2)]; }
 
         /// <summary>
         /// Default constructor
@@ -52,25 +64,26 @@ namespace WindCalculator.Model
         private void CreateWalls()
         {
             WallsList = new List<WallModel>();
+
             // WW
-            WallModel new_wall = new WallModel((float)L, (float)H, new SharpDX.Vector4(0, 0, 0, 1), new SharpDX.Vector4(0, 0, -1, 1));
+            WallModel new_wall = new WallModel((float)B, (float)H, BuildingWalls.BLDG_WALL_WW, new SharpDX.Vector4(0, 0, (float)(B), 1), new SharpDX.Vector4(-1, 0, 0, 0));
             WallsList.Add(new_wall);
 
             // LW
-            new_wall = new WallModel((float)L, (float)H, new SharpDX.Vector4(100, 0, 0, 1), new SharpDX.Vector4(0, 0, 1, 1));
+            new_wall = new WallModel((float)B, (float)H, BuildingWalls.BLDG_WALL_LW, new SharpDX.Vector4((float)L, 0, 0, 1), new SharpDX.Vector4(1, 0, 0, 0));
             WallsList.Add(new_wall);
 
             // SW-left (looking at windward)
-            new_wall = new WallModel((float)B, (float)H, new SharpDX.Vector4(200, 0, 0, 1), new SharpDX.Vector4(-1, 0, 0, 1));
+            new_wall = new WallModel((float)L, (float)H, BuildingWalls.BLDG_WALL_SW_1, new SharpDX.Vector4((float)L, 0, (float)(B), 1), new SharpDX.Vector4(0, 0, 1, 0));
             WallsList.Add(new_wall);
 
             // SW-right (look at windward)
-            new_wall = new WallModel((float)B, (float)H, new SharpDX.Vector4(300, 0, 0, 1), new SharpDX.Vector4(1, 0, 0, 1));
+            new_wall = new WallModel((float)L, (float)H, BuildingWalls.BLDG_WALL_SW_2, new SharpDX.Vector4(0, 0, 0, 1), new SharpDX.Vector4(0, 0, -1, 0));
             WallsList.Add(new_wall);
 
-            // Roof surface
-            new_wall = new WallModel((float)B, (float)L, new SharpDX.Vector4(400, 0, 0, 1), new SharpDX.Vector4(0, 1, 0, 1));
-            WallsList.Add(new_wall);
+            //// Roof surface
+            //new_wall = new WallModel((float)L, (float)B, new SharpDX.Vector4(400, 0, 0, 1), new SharpDX.Vector4(0, 1, 0, 1));
+            //WallsList.Add(new_wall);
         }
     }
 }

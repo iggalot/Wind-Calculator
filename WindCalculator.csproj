@@ -62,7 +62,6 @@
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Model\BuildingModel.cs" />
     <Compile Include="Model\Gridlines.cs" />
-    <Compile Include="Model\TRS_Matrix_Transform.cs" />
     <Compile Include="Model\UCSIcon.cs" />
     <Compile Include="Model\WallModel.cs" />
     <Compile Include="Model\WindModel.cs" />

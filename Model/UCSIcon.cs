@@ -27,9 +27,9 @@ namespace WindCalculator.Model
             UCSlineList[2] = new SharpDX.Vector4(origin.X, origin.Y, origin.Z, 1);
             UCSlineList[3] = new SharpDX.Vector4(origin.X, origin.Y + DEFAULT_AXIS_LENGTH, origin.Z, 1);
 
-            // line in Z direction
+            // line in Z direction -- negative axis length to maintain right hand rule
             UCSlineList[4] = new SharpDX.Vector4(origin.X, origin.Y, origin.Z, 1);
-            UCSlineList[5] = new SharpDX.Vector4(origin.X, origin.Y, origin.Z + DEFAULT_AXIS_LENGTH, 1);
+            UCSlineList[5] = new SharpDX.Vector4(origin.X, origin.Y, origin.Z - DEFAULT_AXIS_LENGTH, 1);
         }
 
         public DModel CreateModel(BaseDrawingPipeline pipeline)
