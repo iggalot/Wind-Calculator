@@ -77,8 +77,6 @@ namespace WindCalculator.Model
 
             // P3 
             PointsList[3] = DXMathFunctions.Vec_Add(ref_pt, UpVector);
-
-
         }
 
         public DModel CreateModel(BaseDrawingPipeline pipeline)
@@ -137,7 +135,7 @@ namespace WindCalculator.Model
             SharpDX.Vector4 line_color = new SharpDX.Vector4(1, 0, 0, 1);
 
             // Create the vertex array and load it with data
-            DColorShader.DVertex[] vertices = new DColorShader.DVertex[6];
+            DColorShader.DVertex[] vertices = new DColorShader.DVertex[12];
 
             for (int i = 0; i < Model.VertexCount; i++)
             {
