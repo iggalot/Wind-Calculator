@@ -555,7 +555,7 @@ namespace WindCalculator
 
 
                 DModel model = new DModel();
-                model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_TRIANGLE);
+                model.InitializeBufferTestTriangle_NoTexture(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_TRIANGLE);
                 ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
             } else
             {
@@ -582,11 +582,11 @@ namespace WindCalculator
             if (bIsDirectXEnabled)
             {
                 DModel model = new DModel();
-                model.InitializeBufferTestTriangle(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
+                model.InitializeBufferTestTriangle_NoTexture(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
                 ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
 
                 model = new DModel();
-                model.InitializeBuffer(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
+                model.InitializeBuffer_NoTexture(((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.D3D.Device, ModelElementTypes.MODEL_ELEMENT_LINE);
                 ((DirectXDrawingPipeline)PipelineList[0]).GetDSystem.Graphics.AddModel(model);
             }
             else
